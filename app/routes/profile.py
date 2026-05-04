@@ -62,7 +62,7 @@ async def update_profile(
         profile_picture_url=current_user.profile_picture_url
     )
 
-@router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/delete-account", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_account(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
