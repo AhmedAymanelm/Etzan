@@ -7,6 +7,9 @@ from app.utils.date_parser import parse_date_input
 class ProfilePictureUpdateRequest(BaseModel):
     profile_picture_url: str = Field(..., description="رابط صورة الملف الشخصي")
 
+class NameUpdateRequest(BaseModel):
+    fullname: str = Field(..., description="الاسم الكامل للمستخدم")
+
 class BirthDetailsUpdateRequest(BaseModel):
     date_of_birth: date = Field(..., description="تاريخ الميلاد")
     city_of_birth: str = Field(..., description="اسم مدينة الميلاد")
