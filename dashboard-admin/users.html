@@ -273,6 +273,71 @@
       }
     }
 
+    /* ── Creative Alerts ── */
+    .creative-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .creative-modal-overlay.show { display: flex; opacity: 1; }
+    .creative-modal-box {
+      background: var(--bg-surface);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 400px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .creative-modal-overlay.show .creative-modal-box { transform: scale(1); }
+    .creative-modal-icon {
+      width: 84px; height: 84px;
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border-radius: 20px;
+      display: flex;
+      align-items: center; justify-content: center;
+      font-size: 3rem;
+      margin: 0 auto 1.5rem;
+      transform: rotate(-5deg);
+    }
+    .creative-modal-title { font-size: 1.6rem; font-weight: 900; color: var(--text-main); margin-bottom: 0.8rem; letter-spacing: -0.03em; }
+    .creative-modal-text { font-size: 1rem; color: #64748b; line-height: 1.6; margin-bottom: 2.5rem; }
+    .creative-modal-actions { display: flex; gap: 1rem; }
+    .creative-btn {
+      flex: 1; padding: 0.8rem; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .creative-btn-confirm { background: #ef4444; color: white; }
+    .creative-btn-confirm:hover { background: #dc2626; box-shadow: 0 8px 15px rgba(239, 68, 68, 0.3); }
+    .creative-btn-cancel { background: var(--bg-body); color: var(--text-muted); }
+    .creative-btn-cancel:hover { background: #e2e8f0; }
+
+    /* Toast */
+    .creative-toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: white;
+      border-left: 5px solid var(--primary-color);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      display: flex; align-items: center; gap: 1rem;
+      z-index: 10000;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .creative-toast.show { transform: translateX(0); }
+    .creative-toast-icon { font-size: 1.5rem; color: var(--primary-color); }
+    .creative-toast-content { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
   </style>
 </head>
 
@@ -371,6 +436,24 @@
         <div id="modalAssessments"></div>
       </div>
     </div>
+  </div>
+
+  <!-- ── Creative Modal Overlay ── -->
+  <div class="creative-modal-overlay" id="creativeConfirmModal">
+    <div class="creative-modal-box">
+      <div class="creative-modal-icon"><i class='bx bx-error-circle'></i></div>
+      <div class="creative-modal-title" id="ccmTitle">Are you sure?</div>
+      <div class="creative-modal-text" id="ccmText">This action cannot be undone.</div>
+      <div class="creative-modal-actions">
+        <button class="creative-btn creative-btn-cancel" onclick="closeCreativeConfirm()">Cancel</button>
+        <button class="creative-btn creative-btn-confirm" id="ccmConfirmBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="creative-toast" id="creativeToast">
+    <div class="creative-toast-icon"><i class='bx bxs-check-circle'></i></div>
+    <div class="creative-toast-content" id="ctText">Action successful</div>
   </div>
 
   <script src="app.js?v=4"></script>
@@ -511,35 +594,82 @@
     });
 
     async function grantSub(userId, name) {
-      if (!confirm(`Grant a free 30-day subscription to ${name}?`)) return;
-      const res = await apiFetch(`/admin/users/${userId}/grant-subscription`, { method: 'POST' });
-      if (res && res.ok) {
-        alert('Subscription granted successfully.');
-        fetchUsers();
-      } else alert('Failed to grant subscription.');
+      showCreativeConfirm('Grant Subscription?', `Grant a free 30-day subscription to ${name}?`, async () => {
+        const res = await apiFetch(`/admin/users/${userId}/grant-subscription`, { method: 'POST' });
+        if (res && res.ok) {
+          showCreativeToast('Subscription granted successfully.');
+          fetchUsers();
+        } else {
+          showCreativeToast('Failed to grant subscription.', 'bx-error-circle');
+        }
+      });
     }
 
     async function resetTrial(userId, name) {
-      if (!confirm(`Reset the free trial for ${name}?`)) return;
-      const res = await apiFetch(`/admin/users/${userId}/reset-free-trial`, { method: 'POST' });
-      if (res && res.ok) {
-        alert('Free trial reset successfully.');
-        fetchUsers();
-      } else alert('Failed to reset free trial.');
+      showCreativeConfirm('Reset Trial?', `Reset the free trial for ${name}?`, async () => {
+        const res = await apiFetch(`/admin/users/${userId}/reset-free-trial`, { method: 'POST' });
+        if (res && res.ok) {
+          showCreativeToast('Free trial reset!');
+          fetchUsers();
+        } else {
+          showCreativeToast('Failed to reset trial.', 'bx-error-circle');
+        }
+      });
     }
 
     async function toggleStatus(userId, name) {
-      if (!confirm(`Toggle active status for ${name}?`)) return;
-      const res = await apiFetch(`/admin/users/${userId}/toggle-status`, { method: 'POST' });
-      if (res && res.ok) fetchUsers();
-      else alert('Failed to toggle status.');
+      showCreativeConfirm('Toggle Status?', `Are you sure you want to toggle the active status for ${name}?`, async () => {
+        const res = await apiFetch(`/admin/users/${userId}/toggle-status`, { method: 'POST' });
+        if (res && res.ok) {
+          showCreativeToast('Status updated!');
+          fetchUsers();
+        } else {
+          showCreativeToast('Failed to update status.', 'bx-error-circle');
+        }
+      });
     }
 
     async function deleteUser(userId, name) {
-      if (!confirm(`⚠️ Delete user "${name}" and ALL their data? This cannot be undone.`)) return;
-      const res = await apiFetch(`/admin/users/${userId}`, { method: 'DELETE' });
-      if (res && res.ok) { fetchUsers(); }
-      else alert('Failed to delete user.');
+      showCreativeConfirm('Delete User?', `Are you sure you want to delete user "${name}" and ALL their data? This action is permanent.`, async () => {
+        const res = await apiFetch(`/admin/users/${userId}`, { method: 'DELETE' });
+        if (res && res.ok) {
+          showCreativeToast('User deleted successfully.');
+          fetchUsers();
+        } else {
+          showCreativeToast('Failed to delete user.', 'bx-error-circle');
+        }
+      });
+    }
+
+    // ── Creative UI Helpers ──────────────────────────────────────────────────
+    let _onConfirmCallback = null;
+    function showCreativeConfirm(title, text, callback) {
+      document.getElementById('ccmTitle').textContent = title;
+      document.getElementById('ccmText').textContent = text;
+      _onConfirmCallback = callback;
+      const modal = document.getElementById('creativeConfirmModal');
+      modal.classList.add('show');
+      
+      const btn = document.getElementById('ccmConfirmBtn');
+      // Remove old listeners
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener('click', () => {
+        closeCreativeConfirm();
+        if (_onConfirmCallback) _onConfirmCallback();
+      });
+    }
+
+    function closeCreativeConfirm() {
+      document.getElementById('creativeConfirmModal').classList.remove('show');
+    }
+
+    function showCreativeToast(text, icon = 'bxs-check-circle') {
+      const toast = document.getElementById('creativeToast');
+      document.getElementById('ctText').textContent = text;
+      toast.querySelector('i').className = 'bx ' + icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
     }
   </script>
 </body>
