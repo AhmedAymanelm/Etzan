@@ -453,7 +453,7 @@
             <td style="font-size:0.8rem;color:var(--text-muted);">${date}</td>
             <td>${statusBadge}</td>
             <td>
-              <div class="actions">
+              <div class="actions-cell">
                 <button class="btn-sm btn-info" onclick="viewUser('${u.id}')" title="View"><i class='bx bx-show'></i></button>
                 <button class="btn-sm btn-info" style="background:#d1fae5;color:#065f46;border-color:#a7f3d0;" onclick="grantSub('${u.id}', '${name}')" title="Grant Subscription"><i class='bx bx-star'></i></button>
                 <button class="btn-sm btn-warn" onclick="resetTrial('${u.id}', '${name}')" title="Reset Trial"><i class='bx bx-reset'></i></button>
@@ -494,7 +494,7 @@
         assessEl.innerHTML = u.assessments.map(a => `
           <div class="assess-item">
             <div>${getTypeBadge(a.type)} <span style="margin-left:0.5rem;color:var(--text-muted);font-size:0.8rem;">${new Date(a.created_at).toLocaleDateString()}</span></div>
-            <div>${a.has_video ? '<span style="color:#16a34a;font-size:0.8rem;">🎬 Video</span>' : '<span style="color:var(--text-muted);font-size:0.8rem;">No video</span>'}</div>
+            <div>${a.has_video ? '<span style="color:#16a34a;font-size:0.8rem;">🎬 Video</span>' : ''}</div>
           </div>
         `).join('');
       }
