@@ -2230,6 +2230,8 @@
     }
 
     // ── Letter Science Management ───────────────────────────────────────────
+    window._lettersData = {};
+
     async function loadLetters() {
       const tbody = document.getElementById('lettersTableBody');
       tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;"><i class='bx bx-loader-alt bx-spin'></i> Loading letters...</td></tr>`;
@@ -2243,6 +2245,10 @@
           return;
         }
         
+        // Store globally to avoid JSON string issues in onclick
+        window._lettersData = {};
+        letters.forEach(l => { window._lettersData[l.id] = l; });
+
         tbody.innerHTML = letters.map(l => `
           <tr>
             <td style="font-size:1.2rem; font-weight:700;">${l.letter}</td>
@@ -2250,13 +2256,14 @@
             <td style="max-width:300px; white-space:normal;">${l.guidance_text}</td>
             <td>
               <div style="display:flex; gap:0.5rem;">
-                <button class="btn-edit" onclick='editLetter(${JSON.stringify(l).replace(/'/g, "&apos;")})'><i class='bx bx-edit-alt'></i></button>
+                <button class="btn-edit" onclick="editLetter(${l.id})"><i class='bx bx-edit-alt'></i></button>
                 <button class="btn-revoke" style="background:#fee2e2; color:#dc2626;" onclick="deleteLetter(${l.id})"><i class='bx bx-trash'></i></button>
               </div>
             </td>
           </tr>
         `).join('');
       } catch (e) {
+        console.error("Load Letters Error:", e);
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:#dc2626;">Error loading letters.</td></tr>`;
       }
     }
@@ -2272,14 +2279,17 @@
       openModal('letterModal');
     }
 
-    function editLetter(l) {
+    function editLetter(id) {
+      const l = window._lettersData[id];
+      if (!l) return;
+
       document.getElementById('letterModalAction').textContent = 'Edit';
       document.getElementById('letter_id').value = l.id;
       document.getElementById('letter_char').value = l.letter;
       document.getElementById('letter_type').value = l.guidance_type;
       document.getElementById('letter_text').value = l.guidance_text;
       document.getElementById('letterModalMsg').textContent = '';
-      document.getElementById('letter_char').disabled = true; // Letter is unique, usually don't change it
+      document.getElementById('letter_char').disabled = true;
       openModal('letterModal');
     }
 

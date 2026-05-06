@@ -1,3 +1,4 @@
+import math
 from typing import Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -97,9 +98,7 @@ class LetterService:
     
     @classmethod
     async def analyze(cls, db: AsyncSession, request: LetterAnalysisRequest) -> LetterAnalysisResponse:
-        """
-        تحليل الاسم والعمر وإرجاع التوجيه المناسب
-        """
+        
 
         stage, governing_letter, letters_count = cls.calculate_stage_and_letter(
             request.name, 
