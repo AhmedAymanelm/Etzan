@@ -66,6 +66,7 @@ const translations = {
     "tab-ai-models": "AI Models",
     "tab-health": "System Health",
     "tab-admins": "Admin Access",
+    "tab-letters": "Letter Science",
     
     // KPI Mini
     "kpi-users-assessed": "Users Assessed",
@@ -229,6 +230,7 @@ const translations = {
     "tab-ai-models": "نماذج الذكاء الاصطناعي",
     "tab-health": "حالة النظام",
     "tab-admins": "دخول المشرفين",
+    "tab-letters": "علم الحرف",
     
     // KPI Mini
     "kpi-users-assessed": "المستخدمين الذين تم تقييمهم",
