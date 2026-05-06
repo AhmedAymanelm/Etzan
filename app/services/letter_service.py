@@ -1,52 +1,13 @@
-import math
 from typing import Tuple
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from ..models.letter import LetterAnalysisRequest, LetterAnalysisResponse, GuidanceDictionary
+from ..models.letter_guidance import LetterGuidance
 
 
 class LetterService:
     """خدمة منطق الأعمال لعلم الحرف"""
     
-
-    SPIRITUAL_GUIDANCE = {
-        "ل": "توطيد العلاقة مع الله",
-        "س": "التركيز على التسبيح",
-        "ح": "التركيز على التسبيح",
-        "ي": "التركيز على التسبيح",
-        "ن": "زيادة الصبر",
-        "م": "زيادة الصوم",
-        "ص": "زيادة الصوم",
-        "ط": "زيادة الطهارة"
-    }
-    
-
-    BEHAVIORAL_GUIDANCE = {
-        "أ": "زيادة الود واللطف",
-        "ء": "زيادة الود واللطف",
-        "ب": "التشافي من الماضي",
-        "ت": "التشافي من الماضي",
-        "ج": "السكون والهدوء",
-        "ث": "السكون والهدوء",
-        "خ": "السكون والهدوء",
-        "ك": "السكون والهدوء",
-        "ع": "تكثيف التعلم",
-        "ر": "تكثيف التعلم",
-        "غ": "تكثيف التعلم",
-        "ض": "زيادة التعامل الاجتماعي",
-        "ظ": "زيادة التعامل الاجتماعي",
-        "ش": "تقليل الظهور",
-        "ز": "تقليل الظهور"
-    }
-    
-
-    PHYSICAL_GUIDANCE = {
-        "هـ": "زيادة الرياضة والتنفس",
-        "ه": "زيادة الرياضة والتنفس",
-        "و": "زيادة الرياضة والتنفس",
-        "ف": "زيادة الحركة",
-        "ق": "زيادة الحركة"
-    }
-    
-
     DEPENDENT_LETTERS = ["د", "ذ"]
     
     @classmethod
@@ -117,30 +78,25 @@ class LetterService:
         return governing_letter, False
     
     @classmethod
-    def get_guidance(cls, letter: str) -> Tuple[str, str]:
+    async def get_guidance(cls, db: AsyncSession, letter: str) -> Tuple[str, str]:
         """
-        الحصول على التوجيه المناسب للحرف
+        الحصول على التوجيه المناسب للحرف من قاعدة البيانات
         
         Returns:
             Tuple[str, str]: (guidance_type, guidance_text)
         """
-
-        if letter in cls.SPIRITUAL_GUIDANCE:
-            return "spiritual", cls.SPIRITUAL_GUIDANCE[letter]
+        result = await db.execute(
+            select(LetterGuidance).where(LetterGuidance.letter == letter)
+        )
+        guidance_obj = result.scalar_one_or_none()
         
-
-        if letter in cls.BEHAVIORAL_GUIDANCE:
-            return "behavioral", cls.BEHAVIORAL_GUIDANCE[letter]
-        
-
-        if letter in cls.PHYSICAL_GUIDANCE:
-            return "physical", cls.PHYSICAL_GUIDANCE[letter]
-        
-
+        if guidance_obj:
+            return guidance_obj.guidance_type, guidance_obj.guidance_text
+            
         return "dependent", f"لا يوجد توجيه محدد للحرف '{letter}'"
     
     @classmethod
-    def analyze(cls, request: LetterAnalysisRequest) -> LetterAnalysisResponse:
+    async def analyze(cls, db: AsyncSession, request: LetterAnalysisRequest) -> LetterAnalysisResponse:
         """
         تحليل الاسم والعمر وإرجاع التوجيه المناسب
         """
@@ -158,7 +114,7 @@ class LetterService:
         )
         
 
-        guidance_type, guidance = cls.get_guidance(final_letter)
+        guidance_type, guidance = await cls.get_guidance(db, final_letter)
         
 
         return LetterAnalysisResponse(
@@ -173,10 +129,17 @@ class LetterService:
         )
     
     @classmethod
-    def get_dictionary(cls) -> GuidanceDictionary:
+    async def get_dictionary(cls, db: AsyncSession) -> GuidanceDictionary:
         """إرجاع قاموس التوجيهات الكامل"""
+        result = await db.execute(select(LetterGuidance))
+        guidances = result.scalars().all()
+        
+        spiritual = {g.letter: g.guidance_text for g in guidances if g.guidance_type == "spiritual"}
+        behavioral = {g.letter: g.guidance_text for g in guidances if g.guidance_type == "behavioral"}
+        physical = {g.letter: g.guidance_text for g in guidances if g.guidance_type == "physical"}
+        
         return GuidanceDictionary(
-            spiritual=cls.SPIRITUAL_GUIDANCE,
-            behavioral=cls.BEHAVIORAL_GUIDANCE,
-            physical=cls.PHYSICAL_GUIDANCE
+            spiritual=spiritual,
+            behavioral=behavioral,
+            physical=physical
         )

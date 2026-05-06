@@ -43,12 +43,16 @@ async def init_db():
     from app.models.payment import PaymentRecord
     from app.models.settings import SystemSetting
     from app.models.question import AssessmentQuestion
+    from app.models.letter_guidance import LetterGuidance
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     # Seed default questions if table is empty
     await seed_default_questions()
+    
+    # Seed default letters if table is empty
+    await seed_default_letters()
 
 
 async def seed_default_questions():
@@ -110,3 +114,53 @@ async def seed_default_questions():
 
         await session.commit()
         print("✅ Default assessment questions seeded successfully.")
+
+
+async def seed_default_letters():
+    """Seed the database with default letter guidances if none exist."""
+    from sqlalchemy import select, func
+    from app.models.letter_guidance import LetterGuidance
+
+    async with async_session_maker() as session:
+        count = (await session.execute(
+            select(func.count(LetterGuidance.id))
+        )).scalar_one_or_none() or 0
+
+        if count > 0:
+            return  # Letters already seeded
+
+        spiritual = {
+            "ل": "توطيد العلاقة مع الله", "س": "التركيز على التسبيح",
+            "ح": "التركيز على التسبيح", "ي": "التركيز على التسبيح",
+            "ن": "زيادة الصبر", "م": "زيادة الصوم",
+            "ص": "زيادة الصوم", "ط": "زيادة الطهارة"
+        }
+        
+        behavioral = {
+            "أ": "زيادة الود واللطف", "ء": "زيادة الود واللطف",
+            "ب": "التشافي من الماضي", "ت": "التشافي من الماضي",
+            "ج": "السكون والهدوء", "ث": "السكون والهدوء",
+            "خ": "السكون والهدوء", "ك": "السكون والهدوء",
+            "ع": "تكثيف التعلم", "ر": "تكثيف التعلم",
+            "غ": "تكثيف التعلم", "ض": "زيادة التعامل الاجتماعي",
+            "ظ": "زيادة التعامل الاجتماعي", "ش": "تقليل الظهور",
+            "ز": "تقليل الظهور"
+        }
+        
+        physical = {
+            "هـ": "زيادة الرياضة والتنفس", "ه": "زيادة الرياضة والتنفس",
+            "و": "زيادة الرياضة والتنفس", "ف": "زيادة الحركة",
+            "ق": "زيادة الحركة"
+        }
+
+        for letter, text in spiritual.items():
+            session.add(LetterGuidance(letter=letter, guidance_type="spiritual", guidance_text=text))
+            
+        for letter, text in behavioral.items():
+            session.add(LetterGuidance(letter=letter, guidance_type="behavioral", guidance_text=text))
+            
+        for letter, text in physical.items():
+            session.add(LetterGuidance(letter=letter, guidance_type="physical", guidance_text=text))
+
+        await session.commit()
+        print("✅ Default letter guidances seeded successfully.")

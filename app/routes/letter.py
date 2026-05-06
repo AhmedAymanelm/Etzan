@@ -5,11 +5,26 @@ from app.database import get_db
 from app.auth.models import User
 from app.auth.dependencies import get_current_user
 from app.models.history import AssessmentHistory
+from app.models.letter_guidance import LetterGuidance
 
-from ..models.letter import LetterAnalysisRequest, LetterAnalysisResponse, GuidanceDictionary
+from ..models.letter import (
+    LetterAnalysisRequest, 
+    LetterAnalysisResponse, 
+    GuidanceDictionary,
+    LetterGuidanceCreate,
+    LetterGuidanceUpdate,
+    LetterGuidanceResponse
+)
 from ..services.letter_service import LetterService
 
 router = APIRouter(prefix="/letter", tags=["letter"])
+
+
+# ─── Admin Guard ───────────────────────────────────────────────────────────────
+async def get_admin_user(current_user: User = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
 
 
 @router.post("/analyze", response_model=LetterAnalysisResponse)
@@ -31,7 +46,7 @@ async def analyze_letter(
         HTTPException: في حالة وجود خطأ في التحليل
     """
     try:
-        result = LetterService.analyze(request)
+        result = await LetterService.analyze(db, request)
         
         # Save to history
         history_entry = AssessmentHistory(
@@ -49,11 +64,83 @@ async def analyze_letter(
 
 
 @router.get("/dictionary", response_model=GuidanceDictionary)
-async def get_guidance_dictionary():
+async def get_guidance_dictionary(db: AsyncSession = Depends(get_db)):
     """
     جلب قاموس التوجيهات الكامل (spiritual, behavioral, physical)
     
     Returns:
         GuidanceDictionary: قاموس التوجيهات الكامل
     """
-    return LetterService.get_dictionary()
+    return await LetterService.get_dictionary(db)
+
+
+# ─── Admin Endpoints ──────────────────────────────────────────────────────────
+
+@router.get("/admin/all", response_model=list[LetterGuidanceResponse])
+async def get_all_letter_guidances(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """جلب جميع توجيهات الحروف للمشرفين"""
+    result = await db.execute(select(LetterGuidance).order_by(LetterGuidance.letter))
+    return result.scalars().all()
+
+
+@router.post("/admin/add", response_model=LetterGuidanceResponse)
+async def add_letter_guidance(
+    guidance: LetterGuidanceCreate,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """إضافة توجيه حرف جديد"""
+    # Check if letter already exists
+    existing = await db.execute(select(LetterGuidance).where(LetterGuidance.letter == guidance.letter))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="هذا الحرف موجود مسبقاً")
+        
+    db_guidance = LetterGuidance(**guidance.model_dump())
+    db.add(db_guidance)
+    await db.commit()
+    await db.refresh(db_guidance)
+    return db_guidance
+
+
+@router.put("/admin/update/{guidance_id}", response_model=LetterGuidanceResponse)
+async def update_letter_guidance(
+    guidance_id: int,
+    guidance_update: LetterGuidanceUpdate,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """تحديث توجيه حرف موجود"""
+    result = await db.execute(select(LetterGuidance).where(LetterGuidance.id == guidance_id))
+    db_guidance = result.scalar_one_or_none()
+    
+    if not db_guidance:
+        raise HTTPException(status_code=404, detail="توجيه الحرف غير موجود")
+        
+    update_data = guidance_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_guidance, key, value)
+        
+    await db.commit()
+    await db.refresh(db_guidance)
+    return db_guidance
+
+
+@router.delete("/admin/delete/{guidance_id}")
+async def delete_letter_guidance(
+    guidance_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """حذف توجيه حرف"""
+    result = await db.execute(select(LetterGuidance).where(LetterGuidance.id == guidance_id))
+    db_guidance = result.scalar_one_or_none()
+    
+    if not db_guidance:
+        raise HTTPException(status_code=404, detail="توجيه الحرف غير موجود")
+        
+    await db.delete(db_guidance)
+    await db.commit()
+    return {"message": "تم حذف توجيه الحرف بنجاح"}

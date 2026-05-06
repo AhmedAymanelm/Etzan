@@ -45,3 +45,28 @@ class GuidanceDictionary(BaseModel):
     spiritual: dict[str, str]
     behavioral: dict[str, str]
     physical: dict[str, str]
+
+
+# --- Admin Schemas ---
+
+class LetterGuidanceBase(BaseModel):
+    letter: str = Field(..., max_length=10, description="الحرف")
+    guidance_type: Literal["spiritual", "behavioral", "physical"] = Field(..., description="نوع التوجيه")
+    guidance_text: str = Field(..., description="نص التوجيه")
+
+
+class LetterGuidanceCreate(LetterGuidanceBase):
+    pass
+
+
+class LetterGuidanceUpdate(BaseModel):
+    letter: str | None = Field(None, max_length=10)
+    guidance_type: Literal["spiritual", "behavioral", "physical"] | None = None
+    guidance_text: str | None = None
+
+
+class LetterGuidanceResponse(LetterGuidanceBase):
+    id: int
+
+    class Config:
+        from_attributes = True
