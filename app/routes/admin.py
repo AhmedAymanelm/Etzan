@@ -116,28 +116,18 @@ async def get_dashboard_stats(
             if s in completed_types:
                 unique_stage_counts[s] += 1
 
-    # Count exactly how many unique users have done EACH stage
     unique_stage_counts = {
-        "Psychology": 0,
-        "Neuroscience": 0,
-        "Letter Science": 0,
-        "Astrology": 0,
-        "Comprehensive": 0
+        "psychology": 0,
+        "neuroscience": 0,
+        "letter": 0,
+        "astrology": 0,
+        "comprehensive": 0
     }
     
-    # Map database type names to the display labels used in the buckets
-    type_map = {
-        "psychology": "Psychology",
-        "neuroscience": "Neuroscience",
-        "letter": "Letter Science",
-        "astrology": "Astrology",
-        "comprehensive": "Comprehensive"
-    }
-
     for completed_types in user_journey.values():
-        for db_type, label in type_map.items():
+        for db_type in unique_stage_counts.keys():
             if db_type in completed_types:
-                unique_stage_counts[label] += 1
+                unique_stage_counts[db_type] += 1
 
     # Return the direct counts. 
     # NOTE: The frontend (app.js) was doing a cumulative sum, which we will now disable 
