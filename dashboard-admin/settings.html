@@ -849,6 +849,9 @@
           <button class="tab-btn" onclick="switchTab('letters', this)">
             <i class='bx bx-font'></i> <span data-i18n="tab-letters">Letter Science</span>
           </button>
+          <button class="tab-btn" onclick="switchTab('notifications', this)">
+            <i class='bx bx-bell'></i> <span>Notifications</span>
+          </button>
         </div>
 
         <!-- ── TAB: Payment Gateways ─────────────────────────────── -->
@@ -1142,6 +1145,117 @@
           </div>
         </div>
 
+        <!-- ── TAB: Notifications ─────────────────────────────────── -->
+        <div class="tab-panel" id="tab-notifications">
+
+          <!-- Stats Cards -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;" id="notifStatsGrid">
+            <div class="card" style="text-align:center; padding:1.25rem;">
+              <i class='bx bx-devices' style="font-size:2rem; color:var(--primary-color);"></i>
+              <h3 style="margin:0.5rem 0 0.2rem; font-size:1.5rem; font-weight:800;" id="notifStatDevices">—</h3>
+              <p style="margin:0; font-size:0.78rem; color:var(--text-muted);">Registered Devices</p>
+            </div>
+            <div class="card" style="text-align:center; padding:1.25rem;">
+              <i class='bx bx-user-check' style="font-size:2rem; color:#10b981;"></i>
+              <h3 style="margin:0.5rem 0 0.2rem; font-size:1.5rem; font-weight:800;" id="notifStatUsers">—</h3>
+              <p style="margin:0; font-size:0.78rem; color:var(--text-muted);">Users with Devices</p>
+            </div>
+            <div class="card" style="text-align:center; padding:1.25rem;">
+              <i class='bx bx-send' style="font-size:2rem; color:#6366f1;"></i>
+              <h3 style="margin:0.5rem 0 0.2rem; font-size:1.5rem; font-weight:800;" id="notifStatSent">—</h3>
+              <p style="margin:0; font-size:0.78rem; color:var(--text-muted);">Total Sent</p>
+            </div>
+            <div class="card" style="text-align:center; padding:1.25rem;">
+              <i class='bx bx-check-double' style="font-size:2rem; color:#f59e0b;"></i>
+              <h3 style="margin:0.5rem 0 0.2rem; font-size:1.5rem; font-weight:800;" id="notifStatDelivered">—</h3>
+              <p style="margin:0; font-size:0.78rem; color:var(--text-muted);">Total Delivered</p>
+            </div>
+          </div>
+
+          <!-- Firebase Status -->
+          <div id="notifFirebaseStatus" style="margin-bottom:1.25rem;"></div>
+
+          <!-- Send Notification Form -->
+          <div style="background:linear-gradient(145deg, #1e293b, #0f172a); color:white; border-radius:24px; padding:2.5rem; margin-bottom:2rem; box-shadow:0 20px 40px -15px rgba(15,23,42,0.4); border:1px solid rgba(255,255,255,0.05); position:relative; overflow:hidden;">
+            <div style="position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%); pointer-events:none;"></div>
+            <h3 style="font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; margin:0 0 0.5rem; position:relative;">
+              <i class='bx bx-bell' style="color:#a78bfa;"></i> Send Push Notification
+            </h3>
+            <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 2rem;">Compose and send a notification to your app users</p>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; position:relative;">
+              <div class="form-group">
+                <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em;">Notification Title</label>
+                <input type="text" id="notifTitle" placeholder="عنوان الإشعار" dir="rtl"
+                  style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; height:48px; padding:0 1rem; border-radius:12px; font-weight:500; width:100%; box-sizing:border-box;">
+              </div>
+              <div class="form-group">
+                <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em;">Target</label>
+                <select id="notifTarget"
+                  style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; height:48px; padding:0 1rem; border-radius:12px; font-weight:500; width:100%; box-sizing:border-box;"
+                  onchange="onNotifTargetChange()">
+                  <option value="broadcast">📢 All Users (Broadcast)</option>
+                  <option value="user">👤 Specific User</option>
+                  <option value="group">👥 Group of Users</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- User selector (shown for user/group targets) -->
+            <div id="notifUserSelector" style="display:none; margin-bottom:1.5rem; position:relative;">
+              <div class="form-group">
+                <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em;">Select User(s)</label>
+                <input type="text" id="notifUserSearch" placeholder="Search by name or email..." autocomplete="off"
+                  style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; height:48px; padding:0 1rem; border-radius:12px; font-weight:500; width:100%; box-sizing:border-box;"
+                  oninput="filterNotifUsers()">
+                <div id="notifUserDropdown" style="position:absolute; left:0; right:0; max-height:200px; overflow-y:auto; background:#1e293b; border:1px solid rgba(255,255,255,0.15); border-radius:12px; margin-top:4px; display:none; z-index:100;"></div>
+              </div>
+              <div id="notifSelectedUsers" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem;"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.5rem; position:relative;">
+              <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em;">Notification Body</label>
+              <textarea id="notifBody" placeholder="محتوى الإشعار..." dir="rtl" rows="3"
+                style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:1rem; border-radius:12px; font-weight:500; width:100%; box-sizing:border-box; font-family:inherit; font-size:0.875rem; resize:vertical;"></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; position:relative;">
+              <button id="notifSendBtn" onclick="sendNotification()"
+                style="background:linear-gradient(135deg, var(--primary-color), #4f46e5); color:white; border:none; padding:0 2.5rem; height:48px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:0.8rem; transition:all 0.3s; box-shadow:0 10px 20px -10px rgba(79,70,229,0.5); font-size:0.9rem;">
+                <i class='bx bx-send'></i> Send Notification
+              </button>
+            </div>
+            <div id="notifSendMsg" style="margin-top:1rem; font-size:0.85rem; font-weight:600; position:relative;"></div>
+          </div>
+
+          <!-- Notification History -->
+          <div class="card">
+            <h3 class="section-title"><i class='bx bx-history' style="color:var(--primary-color)"></i> Notification History</h3>
+            <table class="settings-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Body</th>
+                  <th>Target</th>
+                  <th>Sent</th>
+                  <th>Failed</th>
+                  <th>Sent By</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="notifHistoryBody">
+                <tr>
+                  <td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">
+                    <i class='bx bx-loader-alt bx-spin'></i> Loading...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
       </div>
     </main>
   </div>
@@ -1354,6 +1468,7 @@
       if (name === 'subscriptions' && !window._subLoaded) loadSubscriptions();
       if (name === 'pattern_music' && !window._pmLoaded) loadPatternMusic();
       if (name === 'letters') loadLetters();
+      if (name === 'notifications') loadNotifications();
     }
 
     // ── Payment Gateways ─────────────────────────────────────────
@@ -2345,6 +2460,250 @@
             showCreativeToast('Error deleting letter.', 'bx-error-circle');
           }
         } catch (e) {
+          showCreativeToast('Network error.', 'bx-error-circle');
+        }
+      });
+    }
+
+    // ── Notifications ─────────────────────────────────────────────
+    let _notifUsersCache = [];
+    let _notifSelectedIds = [];
+
+    async function loadNotifications() {
+      loadNotifStats();
+      loadNotifHistory();
+      // Pre-fetch users for the selector
+      if (_notifUsersCache.length === 0) {
+        try {
+          const res = await apiFetch('/admin/users?limit=500');
+          if (res && res.ok) _notifUsersCache = await res.json();
+        } catch(e) { console.error('Failed to load users for notification selector', e); }
+      }
+    }
+
+    async function loadNotifStats() {
+      try {
+        const res = await apiFetch('/admin/notifications/stats');
+        if (!res || !res.ok) return;
+        const s = await res.json();
+        document.getElementById('notifStatDevices').textContent = s.total_devices;
+        document.getElementById('notifStatUsers').textContent = s.unique_users_with_devices;
+        document.getElementById('notifStatSent').textContent = s.total_notifications_sent;
+        document.getElementById('notifStatDelivered').textContent = s.total_delivered;
+
+        // Firebase status banner
+        const statusEl = document.getElementById('notifFirebaseStatus');
+        if (s.firebase_ready) {
+          statusEl.innerHTML = `<div class="status-banner banner-ok"><i class='bx bx-check-circle'></i> Firebase is connected and ready to send notifications.</div>`;
+        } else {
+          statusEl.innerHTML = `<div class="status-banner banner-warn"><i class='bx bx-error'></i> Firebase is not configured. Push notifications are disabled. Add FIREBASE_CREDENTIALS_JSON to your environment.</div>`;
+        }
+      } catch(e) {
+        console.error('Failed to load notification stats', e);
+      }
+    }
+
+    async function loadNotifHistory() {
+      const tbody = document.getElementById('notifHistoryBody');
+      try {
+        const res = await apiFetch('/admin/notifications/history?limit=50');
+        if (!res || !res.ok) return;
+        const items = await res.json();
+        if (items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);"><i class=\'bx bx-bell-off\'></i> No notifications sent yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = items.map(n => {
+          const targetBadge = {
+            broadcast: '<span style="background:#dbeafe;color:#1d4ed8;padding:0.2rem 0.6rem;border-radius:99px;font-size:0.72rem;font-weight:700;">📢 Broadcast</span>',
+            user: '<span style="background:#fef3c7;color:#92400e;padding:0.2rem 0.6rem;border-radius:99px;font-size:0.72rem;font-weight:700;">👤 User</span>',
+            group: '<span style="background:#e0f2fe;color:#0284c7;padding:0.2rem 0.6rem;border-radius:99px;font-size:0.72rem;font-weight:700;">👥 Group</span>'
+          }[n.target_type] || n.target_type;
+
+          const date = n.created_at ? new Date(n.created_at).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+          return `
+            <tr>
+              <td style="font-weight:600; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${n.title}">${n.title}</td>
+              <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted);" title="${n.body}">${n.body}</td>
+              <td>${targetBadge}</td>
+              <td style="color:#10b981; font-weight:700;">${n.sent_count}</td>
+              <td style="color:${n.failed_count > 0 ? '#ef4444' : 'var(--text-muted)'}; font-weight:700;">${n.failed_count}</td>
+              <td>${n.admin_name}</td>
+              <td style="font-size:0.78rem; color:var(--text-muted);">${date}</td>
+              <td><button class="btn-revoke" onclick="deleteNotifLog('${n.id}')"><i class='bx bx-trash'></i></button></td>
+            </tr>
+          `;
+        }).join('');
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#dc2626; padding:1.5rem;">Failed to load history.</td></tr>';
+      }
+    }
+
+    function onNotifTargetChange() {
+      const target = document.getElementById('notifTarget').value;
+      const selector = document.getElementById('notifUserSelector');
+      if (target === 'broadcast') {
+        selector.style.display = 'none';
+        _notifSelectedIds = [];
+        renderSelectedUsers();
+      } else {
+        selector.style.display = 'block';
+        _notifSelectedIds = [];
+        renderSelectedUsers();
+      }
+    }
+
+    function filterNotifUsers() {
+      const search = document.getElementById('notifUserSearch').value.toLowerCase().trim();
+      const dropdown = document.getElementById('notifUserDropdown');
+      if (!search) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      const matches = _notifUsersCache.filter(u =>
+        (u.fullname && u.fullname.toLowerCase().includes(search)) ||
+        (u.email && u.email.toLowerCase().includes(search))
+      ).slice(0, 10);
+
+      if (matches.length === 0) {
+        dropdown.innerHTML = '<div style="padding:0.75rem 1rem; color:#94a3b8; font-size:0.82rem;">No users found</div>';
+      } else {
+        dropdown.innerHTML = matches.map(u => {
+          const isSelected = _notifSelectedIds.includes(u.id);
+          return `<div onclick="toggleNotifUser('${u.id}', '${u.fullname}', '${u.email}')" style="padding:0.65rem 1rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.15s; ${isSelected ? 'background:rgba(99,102,241,0.2);' : ''}" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='${isSelected ? 'rgba(99,102,241,0.2)' : 'transparent'}'">
+            <div>
+              <div style="font-weight:600; font-size:0.85rem; color:white;">${u.fullname}</div>
+              <div style="font-size:0.75rem; color:#94a3b8;">${u.email}</div>
+            </div>
+            ${isSelected ? '<i class=\'bx bx-check\' style="color:#10b981; font-size:1.2rem;"></i>' : ''}
+          </div>`;
+        }).join('');
+      }
+      dropdown.style.display = 'block';
+    }
+
+    function toggleNotifUser(id, name, email) {
+      const target = document.getElementById('notifTarget').value;
+      if (target === 'user') {
+        // Single user — replace
+        _notifSelectedIds = [id];
+        document.getElementById('notifUserSearch').value = name;
+        document.getElementById('notifUserDropdown').style.display = 'none';
+      } else {
+        // Group — toggle
+        const idx = _notifSelectedIds.indexOf(id);
+        if (idx > -1) _notifSelectedIds.splice(idx, 1);
+        else _notifSelectedIds.push(id);
+        filterNotifUsers(); // refresh dropdown checkmarks
+      }
+      renderSelectedUsers();
+    }
+
+    function renderSelectedUsers() {
+      const container = document.getElementById('notifSelectedUsers');
+      if (_notifSelectedIds.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = _notifSelectedIds.map(id => {
+        const user = _notifUsersCache.find(u => u.id === id);
+        const label = user ? user.fullname : id;
+        return `<span style="background:rgba(99,102,241,0.2); color:#a5b4fc; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.78rem; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;">
+          ${label}
+          <i class='bx bx-x' style="cursor:pointer; font-size:1rem;" onclick="removeNotifUser('${id}')"></i>
+        </span>`;
+      }).join('');
+    }
+
+    function removeNotifUser(id) {
+      _notifSelectedIds = _notifSelectedIds.filter(i => i !== id);
+      renderSelectedUsers();
+      filterNotifUsers();
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', e => {
+      const dropdown = document.getElementById('notifUserDropdown');
+      const search = document.getElementById('notifUserSearch');
+      if (dropdown && search && !dropdown.contains(e.target) && e.target !== search) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    async function sendNotification() {
+      const title = document.getElementById('notifTitle').value.trim();
+      const body = document.getElementById('notifBody').value.trim();
+      const target_type = document.getElementById('notifTarget').value;
+      const msgEl = document.getElementById('notifSendMsg');
+      const btn = document.getElementById('notifSendBtn');
+
+      if (!title || !body) {
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = '⚠️ Please fill in both title and body.';
+        return;
+      }
+
+      if (target_type !== 'broadcast' && _notifSelectedIds.length === 0) {
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = '⚠️ Please select at least one user.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Sending...';
+      msgEl.textContent = '';
+
+      try {
+        const payload = {
+          title,
+          body,
+          target_type,
+          target_user_ids: target_type !== 'broadcast' ? _notifSelectedIds : null
+        };
+
+        const res = await apiFetch('/admin/notifications/send', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          msgEl.style.color = '#10b981';
+          msgEl.textContent = data.message || '✅ Notification sent!';
+          showCreativeToast(`Sent to ${data.sent_count} device(s)`);
+          // Reset form
+          document.getElementById('notifTitle').value = '';
+          document.getElementById('notifBody').value = '';
+          _notifSelectedIds = [];
+          renderSelectedUsers();
+          // Refresh
+          loadNotifStats();
+          loadNotifHistory();
+        } else {
+          msgEl.style.color = '#ef4444';
+          msgEl.textContent = data.detail || 'Failed to send notification.';
+        }
+      } catch(e) {
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'Network error.';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bx bx-send"></i> Send Notification';
+      }
+    }
+
+    async function deleteNotifLog(id) {
+      showCreativeConfirm('Delete Notification Log?', 'This will remove this notification from the history.', async () => {
+        try {
+          const res = await apiFetch(`/admin/notifications/${id}`, { method: 'DELETE' });
+          if (res.ok) {
+            showCreativeToast('Notification log deleted.');
+            loadNotifHistory();
+            loadNotifStats();
+          } else {
+            showCreativeToast('Failed to delete.', 'bx-error-circle');
+          }
+        } catch(e) {
           showCreativeToast('Network error.', 'bx-error-circle');
         }
       });

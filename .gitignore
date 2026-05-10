@@ -27,3 +27,11 @@ test_videos/
 *.mp4
 *.wav
 create_admin.py
+
+# Scratch & temp files
+scratch/
+scratch_*
+cache/
+server.log
+*.log
+app.db

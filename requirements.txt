@@ -21,3 +21,4 @@ cloudinary>=1.36.0
 ffmpeg-python
 timezonefinder
 pytz
+firebase-admin>=6.0.0

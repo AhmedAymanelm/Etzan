@@ -44,6 +44,8 @@ async def init_db():
     from app.models.settings import SystemSetting
     from app.models.question import AssessmentQuestion
     from app.models.letter_guidance import LetterGuidance
+    from app.models.device_token import UserDeviceToken
+    from app.models.notification import NotificationLog
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

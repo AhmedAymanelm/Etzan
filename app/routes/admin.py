@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, extract
+from sqlalchemy import select, func, extract, delete
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
@@ -1338,3 +1338,210 @@ async def get_subscription_stats(
         "paid_active": total_active - admin_granted,
         "users_with_trial_used": trials_used,
     }
+
+
+# ─── Push Notifications Management (Admin) ─────────────────────────────────────
+
+from app.models.device_token import UserDeviceToken
+from app.models.notification import NotificationLog
+from app.services.notification_service import send_push_notification, is_firebase_ready
+
+
+class SendNotificationRequest(BaseModel):
+    title: str
+    body: str
+    target_type: str = "broadcast"  # "broadcast" | "user" | "group"
+    target_user_ids: Optional[List[str]] = None  # Required for "user" and "group"
+    data_payload: Optional[Dict[str, Any]] = None  # Extra data (e.g. deeplink)
+
+
+@router.get("/notifications/stats", summary="Get notification system statistics")
+async def get_notification_stats(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    """Returns stats about registered devices, total notifications sent, etc."""
+    # Total registered active devices
+    total_devices = (await db.execute(
+        select(func.count(UserDeviceToken.id)).where(UserDeviceToken.is_active == True)
+    )).scalar_one_or_none() or 0
+
+    # Devices by platform
+    android_devices = (await db.execute(
+        select(func.count(UserDeviceToken.id)).where(
+            UserDeviceToken.is_active == True,
+            UserDeviceToken.device_type == "android"
+        )
+    )).scalar_one_or_none() or 0
+
+    ios_devices = (await db.execute(
+        select(func.count(UserDeviceToken.id)).where(
+            UserDeviceToken.is_active == True,
+            UserDeviceToken.device_type == "ios"
+        )
+    )).scalar_one_or_none() or 0
+
+    # Unique users with devices
+    unique_users = (await db.execute(
+        select(func.count(func.distinct(UserDeviceToken.user_id))).where(
+            UserDeviceToken.is_active == True
+        )
+    )).scalar_one_or_none() or 0
+
+    # Total notifications sent
+    total_notifications = (await db.execute(
+        select(func.count(NotificationLog.id))
+    )).scalar_one_or_none() or 0
+
+    # Total successfully delivered
+    total_delivered = (await db.execute(
+        select(func.sum(NotificationLog.sent_count))
+    )).scalar_one_or_none() or 0
+
+    # Last notification
+    last_notif = (await db.execute(
+        select(NotificationLog).order_by(NotificationLog.created_at.desc()).limit(1)
+    )).scalar_one_or_none()
+
+    return {
+        "total_devices": total_devices,
+        "android_devices": android_devices,
+        "ios_devices": ios_devices,
+        "unique_users_with_devices": unique_users,
+        "total_notifications_sent": total_notifications,
+        "total_delivered": total_delivered,
+        "firebase_ready": is_firebase_ready(),
+        "last_notification": {
+            "title": last_notif.title,
+            "created_at": last_notif.created_at.isoformat(),
+        } if last_notif else None,
+    }
+
+
+@router.post("/notifications/send", summary="Send a push notification")
+async def send_notification(
+    body: SendNotificationRequest,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    """
+    Send a push notification.
+    - broadcast: sends to ALL registered devices
+    - user: sends to a specific user's devices
+    - group: sends to multiple users' devices
+    """
+    if body.target_type not in ("broadcast", "user", "group"):
+        raise HTTPException(status_code=400, detail="target_type must be 'broadcast', 'user', or 'group'")
+
+    if body.target_type in ("user", "group") and not body.target_user_ids:
+        raise HTTPException(status_code=400, detail="target_user_ids required for 'user' or 'group' target type")
+
+    if not body.title.strip() or not body.body.strip():
+        raise HTTPException(status_code=400, detail="Title and body cannot be empty")
+
+    # Fetch FCM tokens based on target type
+    if body.target_type == "broadcast":
+        result = await db.execute(
+            select(UserDeviceToken.fcm_token).where(UserDeviceToken.is_active == True)
+        )
+    else:
+        result = await db.execute(
+            select(UserDeviceToken.fcm_token).where(
+                UserDeviceToken.is_active == True,
+                UserDeviceToken.user_id.in_(body.target_user_ids)
+            )
+        )
+
+    tokens = [row[0] for row in result.all()]
+
+    if not tokens:
+        raise HTTPException(
+            status_code=404,
+            detail="لا توجد أجهزة مسجلة للمستهدفين"  # No registered devices for targets
+        )
+
+    # Send via FCM
+    success_count, fail_count, invalid_tokens = await send_push_notification(
+        tokens=tokens,
+        title=body.title.strip(),
+        body=body.body.strip(),
+        data=body.data_payload,
+    )
+
+    # Cleanup invalid tokens
+    if invalid_tokens:
+        await db.execute(
+            delete(UserDeviceToken).where(UserDeviceToken.fcm_token.in_(invalid_tokens))
+        )
+
+    # Log the notification
+    log_entry = NotificationLog(
+        title=body.title.strip(),
+        body=body.body.strip(),
+        target_type=body.target_type,
+        target_user_ids=body.target_user_ids,
+        sent_count=success_count,
+        failed_count=fail_count,
+        data_payload=body.data_payload,
+        sent_by=admin.id,
+    )
+    db.add(log_entry)
+    await db.commit()
+
+    return {
+        "message": f"✅ تم إرسال الإشعار — {success_count} نجح، {fail_count} فشل",
+        "sent_count": success_count,
+        "failed_count": fail_count,
+        "invalid_tokens_removed": len(invalid_tokens),
+    }
+
+
+@router.get("/notifications/history", summary="Get notification history")
+async def get_notification_history(
+    skip: int = 0,
+    limit: int = 50,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    """Returns paginated list of sent notifications."""
+    result = await db.execute(
+        select(NotificationLog, User.fullname.label("admin_name"))
+        .outerjoin(User, NotificationLog.sent_by == User.id)
+        .order_by(NotificationLog.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    items = result.all()
+
+    return [
+        {
+            "id": str(item.NotificationLog.id),
+            "title": item.NotificationLog.title,
+            "body": item.NotificationLog.body,
+            "target_type": item.NotificationLog.target_type,
+            "sent_count": item.NotificationLog.sent_count,
+            "failed_count": item.NotificationLog.failed_count,
+            "admin_name": item.admin_name or "System",
+            "created_at": item.NotificationLog.created_at.isoformat() if item.NotificationLog.created_at else None,
+        }
+        for item in items
+    ]
+
+
+@router.delete("/notifications/{notification_id}", summary="Delete a notification log")
+async def delete_notification_log(
+    notification_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    """Delete a notification log entry."""
+    result = await db.execute(
+        select(NotificationLog).where(NotificationLog.id == notification_id)
+    )
+    log_entry = result.scalar_one_or_none()
+    if not log_entry:
+        raise HTTPException(status_code=404, detail="Notification log not found")
+
+    await db.delete(log_entry)
+    await db.commit()
+    return {"message": "✅ تم حذف سجل الإشعار"}
