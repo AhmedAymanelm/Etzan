@@ -43,8 +43,7 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
-    pool_recycle=300,
-    connect_args={"ssl": True} if "up.railway.app" not in DATABASE_URL else {} 
+    pool_recycle=300
 )
 
 async_session_maker = async_sessionmaker(
