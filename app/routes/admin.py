@@ -1445,7 +1445,8 @@ async def update_firebase_config(
         setting = SystemSetting(
             key='firebase_credentials_json',
             value=body.credentials_json,
-            category='system',
+            group='system',
+            label='Firebase Credentials JSON',
             description='Firebase Service Account JSON (Base64)',
             is_secret=True
         )
