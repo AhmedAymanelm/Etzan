@@ -16,10 +16,21 @@ import os
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create database tables on startup
-    await init_db()
+    try:
+        await init_db()
+        print("✅ Database initialized successfully!")
+    except Exception as e:
+        print(f"❌❌❌ DATABASE CONNECTION FAILED ❌❌❌")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {e}")
+        print(f"Make sure DATABASE_URL is correct and the database is reachable.")
+        raise
     # Initialize Firebase Admin SDK for push notifications
-    from app.services.notification_service import init_firebase_from_db
-    await init_firebase_from_db()
+    try:
+        from app.services.notification_service import init_firebase_from_db
+        await init_firebase_from_db()
+    except Exception as e:
+        print(f"⚠️ Firebase init skipped: {e}")
     yield
 
 
