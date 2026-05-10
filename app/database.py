@@ -22,18 +22,29 @@ if DATABASE_URL.startswith("postgres://"):
 elif DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# Strip sslmode from the URL because asyncpg doesn't support it (we use 'ssl' in connect_args instead)
-if "sslmode=" in DATABASE_URL:
-    import re
-    DATABASE_URL = re.sub(r"[?&]sslmode=[^&]+", "", DATABASE_URL)
+# Robustly remove 'sslmode' and other incompatible params for asyncpg
+if "?" in DATABASE_URL:
+    base_url, query_str = DATABASE_URL.split("?", 1)
+    # Remove sslmode from query string
+    params = [p for p in query_str.split("&") if not p.startswith("sslmode=")]
+    DATABASE_URL = base_url + ("?" + "&".join(params) if params else "")
 
+# Masked URL for logging
+masked_url = DATABASE_URL
+if "@" in masked_url:
+    prefix, suffix = masked_url.split("@", 1)
+    if ":" in prefix:
+        proto_user, _ = prefix.rsplit(":", 1)
+        masked_url = f"{proto_user}:****@{suffix}"
+
+print(f"🔌 Attempting connection to: {masked_url}")
 
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
     pool_recycle=300,
-    connect_args={"ssl": "prefer"} # Allow SSL if supported but don't force it to fail if not
+    connect_args={"ssl": True} if "up.railway.app" not in DATABASE_URL else {} 
 )
 
 async_session_maker = async_sessionmaker(
