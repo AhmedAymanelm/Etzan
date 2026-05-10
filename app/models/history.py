@@ -16,7 +16,6 @@ class AssessmentHistory(Base):
     assessment_type = Column(String(50), nullable=False, index=True) # psychology, neuroscience, letter, astrology, comprehensive
     input_data = Column(JSON, nullable=True)
     result_data = Column(JSON, nullable=False)
-    video_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Note: A relationship back to 'User' model is typically defined on the User model

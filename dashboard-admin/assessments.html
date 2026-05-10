@@ -171,25 +171,6 @@
       color: var(--text-muted);
     }
 
-    /* Video badge */
-    .badge-video-yes {
-      background: #d1fae5;
-      color: #065f46;
-      padding: 0.2rem 0.6rem;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      font-weight: 600;
-    }
-
-    .badge-video-no {
-      background: var(--bg-body);
-      color: var(--text-muted);
-      padding: 0.2rem 0.6rem;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      border: 1px solid var(--border-color);
-    }
 
     /* Tab Bar */
     .tab-bar {
@@ -499,11 +480,7 @@
             <div class="kpi-value" id="kpiCompleted">—</div>
             <div class="kpi-sub" data-i18n="sub-all-5-done">All 5 stages done</div>
           </div>
-          <div class="kpi-mini">
-            <div class="kpi-label" data-i18n="kpi-with-video"><i class='bx bx-video'></i> With Video</div>
-            <div class="kpi-value" id="kpiVideo">—</div>
-            <div class="kpi-sub" data-i18n="sub-gen-video">Generated comprehensive video</div>
-          </div>
+
         </div>
 
         <!-- Tab Bar -->
@@ -523,7 +500,6 @@
                   <th style="width: 220px;" data-i18n="table-user">User</th>
                   <th data-i18n="table-journey-progress">Journey Progress</th>
                   <th style="width: 100px;" data-i18n="table-stages">Stages</th>
-                  <th style="width: 80px;" data-i18n="table-video">Video</th>
                   <th style="width: 120px;" data-i18n="table-last-active">Last Active</th>
                 </tr>
               </thead>
@@ -551,11 +527,7 @@
                   <option value="astrology" data-i18n="type-astrology">Astrology</option>
                   <option value="comprehensive" data-i18n="type-comprehensive">Comprehensive</option>
                 </select>
-                <select id="videoFilter" onchange="filterRecords()">
-                  <option value="all" data-i18n="filter-all">All</option>
-                  <option value="yes" data-i18n="filter-has-video">Has Video</option>
-                  <option value="no" data-i18n="filter-no-video">No Video</option>
-                </select>
+
               </div>
             </div>
             <table class="data-table">
@@ -564,7 +536,7 @@
                   <th data-i18n="table-date">Date</th>
                   <th data-i18n="table-user">User</th>
                   <th data-i18n="table-type">Type</th>
-                  <th data-i18n="table-video">Video</th>
+                  <th data-i18n="table-date">Date</th>
                   <th data-i18n="table-actions">Actions</th>
                 </tr>
               </thead>
@@ -629,8 +601,6 @@
         document.getElementById('kpiUsersAssessed').textContent = data.length;
         const fullyDone = data.filter(u => u.completed_count === 5).length;
         document.getElementById('kpiCompleted').textContent = fullyDone;
-        const withVideo = data.filter(u => u.has_video).length;
-        document.getElementById('kpiVideo').textContent = withVideo;
 
         const tbody = document.getElementById('journeyTableBody');
         if (!data.length) {
@@ -677,11 +647,7 @@
               <td style="font-size: 0.8rem; font-weight: 600; color: ${isFull ? '#059669' : 'var(--text-muted)'};">
                 ${user.completed_count} / ${user.total_stages}
               </td>
-              <td>
-                <span class="${user.has_video ? 'badge-video-yes' : 'badge-video-no'}">
-                  ${user.has_video ? '<span data-i18n="video-yes">🎬 Yes</span>' : '<span data-i18n="video-no">—</span>'}
-                </span>
-              </td>
+
               <td style="font-size: 0.78rem; color: var(--text-muted);">${lastActive}</td>
             </tr>
           `;
@@ -737,11 +703,8 @@
 
     function filterRecords() {
       const type = document.getElementById('typeFilter').value;
-      const video = document.getElementById('videoFilter').value;
       let filtered = allRecords;
       if (type !== 'all') filtered = filtered.filter(r => r.type === type);
-      if (video === 'yes') filtered = filtered.filter(r => r.has_video);
-      if (video === 'no') filtered = filtered.filter(r => !r.has_video);
       renderRecords(filtered);
     }
 
@@ -761,7 +724,7 @@
             </div>
           </td>
           <td><span class="badge type-${r.type}">${r.type}</span></td>
-          <td><span class="${r.has_video ? 'badge-video-yes' : 'badge-video-no'}">${r.has_video ? '<span data-i18n="video-yes">🎬 Yes</span>' : '<span data-i18n="video-no">—</span>'}</span></td>
+          <td>${new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
           <td style="display:flex;gap:0.5rem;">
             <button class="action-btn view-btn" onclick="viewResult('${r.id}', '${r.user_name}')"><i class='bx bx-show'></i> <span data-i18n="action-view">View</span></button>
             <button class="action-btn delete-btn" onclick="deleteRecord('${r.id}')"><i class='bx bx-trash'></i> <span data-i18n="action-delete">Delete</span></button>

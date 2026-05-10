@@ -40,7 +40,6 @@ async def get_assessment_history(
             "created_at": record.created_at.isoformat(),
             "input_data": record.input_data,
             "result_data": record.result_data,
-            "video_url": record.video_url
         })
         
     return {

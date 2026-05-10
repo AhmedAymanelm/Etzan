@@ -61,8 +61,8 @@ async def submit_comprehensive_answers(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/generate-video", response_model=Dict[str, Any])
-async def generate_comprehensive_report_and_video(
+@router.post("/generate-report", response_model=Dict[str, Any])
+async def generate_comprehensive_report(
     submission: ComprehensiveAnswers,
     background_tasks: BackgroundTasks,
     payment_session_id: str = "test",
@@ -81,7 +81,7 @@ async def generate_comprehensive_report_and_video(
         payment_session_id: The Fawaterk session ID for the successful payment
     
     Returns:
-        Dict with comprehensive analysis and video generation result
+        Dict with comprehensive analysis 
     
     Raises:
         HTTPException: If payment is not verified or generation fails
@@ -113,7 +113,7 @@ async def generate_comprehensive_report_and_video(
             payment = MockPayment()
             
         # 2. Proceed with all assessments
-        video_data = await ComprehensiveService.analyze_all(
+        report_data = await ComprehensiveService.analyze_all(
             name=submission.name,
             psychology_answers=submission.psychology_answers,
             neuroscience_answers=submission.neuroscience_answers,
@@ -124,53 +124,43 @@ async def generate_comprehensive_report_and_video(
         
         # Inject letter result if provided by the client
         if submission.letter_result:
-            video_data["letter"] = submission.letter_result
+            report_data["letter"] = submission.letter_result
         
-        neuro_pattern = video_data.get("neuroscience", {}).get("dominant")
-        zodiac_sign = video_data.get("astrology", {}).get("sun_sign")
+        neuro_pattern = report_data.get("neuroscience", {}).get("dominant")
+        zodiac_sign = report_data.get("astrology", {}).get("sun_sign")
         
         # 4. Generate AI Text Report (Instantaneous ~10s)
         report_result = await ComprehensiveService.generate_comprehensive_report(
             name=submission.name,
-            psychology_result=video_data.get("psychology", {}),
-            neuroscience_result=video_data.get("neuroscience", {}),
-            astrology_result=video_data.get("astrology", {}),
+            psychology_result=report_data.get("psychology", {}),
+            neuroscience_result=report_data.get("neuroscience", {}),
+            astrology_result=report_data.get("astrology", {}),
             letter_result=submission.letter_result
         )
 
         # 5. Immediate DB Save (Video bypassed)
-        video_response = {"status": "skipped", "video_url": None}
         
         history_entry = AssessmentHistory(
             user_id=current_user.id,
             assessment_type="comprehensive",
             input_data=submission.model_dump(),
-            result_data={"analysis": video_data, "report": report_result, "video": None},
-            video_url=None
+            result_data={"analysis": report_data, "report": report_result},
         )
         db.add(history_entry)
         await db.commit()
         
         return {
             "status": "success",
-            "analysis": video_data,
+            "analysis": report_data,
             "report": report_result,
             "zodiac_sign": zodiac_sign,
             "neuro_pattern": neuro_pattern,
-            "video": video_response,
             "payment_order_id": payment.order_id
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Comprehensive processing failed: {str(e)}")
 
-@router.get("/check-video-status")
-async def check_video_status(zodiac_sign: str, neuro_pattern: str):
-    """
-    Endpoint for mobile apps to poll video generation status.
-    Call this every 10 seconds if POST /generate-video returns video.status == 'generating'.
-    """
-    return {"status": "skipped", "video_url": None}
 
 
 

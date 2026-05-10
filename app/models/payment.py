@@ -13,7 +13,7 @@ class PaymentRecord(Base):
     # Fawaterk transaction tracking
     order_id = Column(String, unique=True, index=True, nullable=False)
     session_id = Column(String, index=True, nullable=True)
-    service_type = Column(String, nullable=True) # e.g., "final_report_video"
+    service_type = Column(String, nullable=True) # e.g., "comprehensive_report"
     
     # Financial details
     amount = Column(Float, nullable=False)

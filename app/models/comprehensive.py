@@ -87,6 +87,5 @@ class ComprehensiveResult(BaseModel):
     psychology: dict
     neuroscience: dict
     astrology: dict
-    video: dict
     status: str
     message: str

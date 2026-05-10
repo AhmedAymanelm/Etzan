@@ -577,7 +577,7 @@
         assessEl.innerHTML = u.assessments.map(a => `
           <div class="assess-item">
             <div>${getTypeBadge(a.type)} <span style="margin-left:0.5rem;color:var(--text-muted);font-size:0.8rem;">${new Date(a.created_at).toLocaleDateString()}</span></div>
-            <div>${a.has_video ? '<span style="color:#16a34a;font-size:0.8rem;">🎬 Video</span>' : ''}</div>
+            <div></div>
           </div>
         `).join('');
       }
