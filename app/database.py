@@ -22,11 +22,11 @@ if DATABASE_URL.startswith("postgres://"):
 elif DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# Robustly remove 'sslmode' and other incompatible params for asyncpg
+# Robustly remove incompatible query params for asyncpg (sslmode, channel_binding, etc.)
+ASYNCPG_INCOMPATIBLE_PARAMS = {"sslmode", "channel_binding"}
 if "?" in DATABASE_URL:
     base_url, query_str = DATABASE_URL.split("?", 1)
-    # Remove sslmode from query string
-    params = [p for p in query_str.split("&") if not p.startswith("sslmode=")]
+    params = [p for p in query_str.split("&") if p.split("=")[0] not in ASYNCPG_INCOMPATIBLE_PARAMS]
     DATABASE_URL = base_url + ("?" + "&".join(params) if params else "")
 
 # Masked URL for logging
@@ -39,11 +39,17 @@ if "@" in masked_url:
 
 print(f"🔌 Attempting connection to: {masked_url}")
 
+import ssl as ssl_module
+ssl_ctx = ssl_module.create_default_context()
+ssl_ctx.check_hostname = False
+ssl_ctx.verify_mode = ssl_module.CERT_NONE
+
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
-    pool_recycle=300
+    pool_recycle=300,
+    connect_args={"ssl": ssl_ctx}
 )
 
 async_session_maker = async_sessionmaker(
