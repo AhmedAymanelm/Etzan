@@ -71,11 +71,11 @@ def init_firebase(creds_json: str = None):
 
 async def init_firebase_from_db():
     """Fetch Firebase credentials from the database and initialize."""
-    from app.database import AsyncSessionLocal
+    from app.database import async_session_maker
     from sqlalchemy import select
     from app.models.settings import SystemSetting
     
-    async with AsyncSessionLocal() as db:
+    async with async_session_maker() as db:
         result = await db.execute(
             select(SystemSetting).where(SystemSetting.key == 'firebase_credentials_json')
         )
