@@ -16,11 +16,18 @@ if not DATABASE_URL:
         "If you are Local: Check if your .env file exists and has DATABASE_URL=..."
     )
 
+# Fix for Railway/Heroku postgres:// vs postgresql:// and adding asyncpg driver
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
-    pool_recycle=300
+    pool_recycle=300,
+    connect_args={"ssl": "prefer"} # Allow SSL if supported but don't force it to fail if not
 )
 
 async_session_maker = async_sessionmaker(
@@ -49,6 +56,8 @@ async def init_db():
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    print("✅ Database tables created/verified successfully.")
 
     # Seed default questions if table is empty
     await seed_default_questions()
