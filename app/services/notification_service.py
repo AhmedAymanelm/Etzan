@@ -20,23 +20,30 @@ _firebase_app = None
 _firebase_initialized = False
 
 
-def init_firebase():
+def init_firebase(creds_json: str = None):
     """
-    Initialize Firebase Admin SDK using credentials from environment.
-    Supports either:
-      - FIREBASE_CREDENTIALS_JSON: base64-encoded service account JSON
-      - FIREBASE_CREDENTIALS_PATH: path to a service account JSON file
+    Initialize Firebase Admin SDK using provided credentials, falling back to environment.
+    If already initialized, it deletes the current app and re-initializes.
     """
     global _firebase_app, _firebase_initialized
-
-    if _firebase_initialized:
-        return
 
     try:
         import firebase_admin
         from firebase_admin import credentials
 
-        creds_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
+        # Clean up existing app if re-initializing
+        try:
+            app = firebase_admin.get_app()
+            firebase_admin.delete_app(app)
+        except ValueError:
+            pass
+            
+        _firebase_app = None
+        _firebase_initialized = False
+
+        if not creds_json:
+            creds_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
+            
         creds_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
 
         if creds_json:
@@ -49,10 +56,8 @@ def init_firebase():
         else:
             logger.warning(
                 "⚠️  Firebase credentials not configured. "
-                "Push notifications will be disabled. "
-                "Set FIREBASE_CREDENTIALS_JSON or FIREBASE_CREDENTIALS_PATH."
+                "Push notifications will be disabled."
             )
-            _firebase_initialized = True
             return
 
         _firebase_app = firebase_admin.initialize_app(cred)
@@ -61,7 +66,26 @@ def init_firebase():
 
     except Exception as e:
         logger.error(f"❌ Firebase initialization failed: {e}")
-        _firebase_initialized = True  # Mark as attempted to avoid retries
+        _firebase_initialized = False
+
+
+async def init_firebase_from_db():
+    """Fetch Firebase credentials from the database and initialize."""
+    from app.database import AsyncSessionLocal
+    from sqlalchemy import select
+    from app.models.settings import SystemSetting
+    
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(SystemSetting).where(SystemSetting.key == 'firebase_credentials_json')
+        )
+        setting = result.scalar_one_or_none()
+        
+        if setting and setting.value:
+            init_firebase(setting.value)
+        else:
+            init_firebase() # fallback to env
+
 
 
 def is_firebase_ready() -> bool:

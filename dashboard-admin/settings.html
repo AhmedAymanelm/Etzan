@@ -1173,7 +1173,12 @@
           </div>
 
           <!-- Firebase Status -->
-          <div id="notifFirebaseStatus" style="margin-bottom:1.25rem;"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+            <div id="notifFirebaseStatus" style="flex:1; margin-right:1rem;"></div>
+            <button class="btn-edit" onclick="openFirebaseConfigModal()" style="white-space:nowrap; padding:0.6rem 1rem;">
+              <i class='bx bx-cog'></i> Configure Firebase
+            </button>
+          </div>
 
           <!-- Send Notification Form -->
           <div style="background:linear-gradient(145deg, #1e293b, #0f172a); color:white; border-radius:24px; padding:2.5rem; margin-bottom:2rem; box-shadow:0 20px 40px -15px rgba(15,23,42,0.4); border:1px solid rgba(255,255,255,0.05); position:relative; overflow:hidden;">
@@ -1442,6 +1447,33 @@
         <button class="btn-submit" onclick="saveLetterGuidance()">Save Guidance</button>
       </div>
       <div id="letterModalMsg" class="modal-msg"></div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Firebase Config ────────────────────────────────── -->
+  <div class="modal-overlay" id="firebaseModal">
+    <div class="modal-box" style="width:600px;">
+      <button class="modal-close" onclick="closeModal('firebaseModal')"><i class='bx bx-x'></i></button>
+      <div class="modal-title"><i class='bx bxl-firebase' style="color:#f5a623;"></i> Configure Firebase</div>
+      <div class="modal-sub">Paste the content of your Firebase Service Account JSON file below.</div>
+      
+      <div class="form-group" style="margin-top:1rem;">
+        <label>Service Account JSON</label>
+        <textarea id="firebaseJsonText" style="width:100%; height:200px; padding:0.8rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); font-family:monospace; font-size:0.8rem; white-space:pre;" placeholder='{
+  "type": "service_account",
+  "project_id": "your-project",
+  ...
+}'></textarea>
+        <small style="color:var(--text-muted); display:block; margin-top:0.4rem;">
+          Go to Firebase Console -> Project Settings -> Service Accounts -> Generate new private key. Open the downloaded file and paste its entire contents here.
+        </small>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('firebaseModal')">Cancel</button>
+        <button class="btn-submit" onclick="saveFirebaseConfig()" id="btnSaveFirebase"><i class='bx bx-save'></i> Save Configuration</button>
+      </div>
+      <div id="firebaseModalMsg" class="modal-msg"></div>
     </div>
   </div>
 
@@ -2494,9 +2526,9 @@
         // Firebase status banner
         const statusEl = document.getElementById('notifFirebaseStatus');
         if (s.firebase_ready) {
-          statusEl.innerHTML = `<div class="status-banner banner-ok"><i class='bx bx-check-circle'></i> Firebase is connected and ready to send notifications.</div>`;
+          statusEl.innerHTML = `<div class="status-banner banner-ok" style="margin:0;"><i class='bx bx-check-circle'></i> Firebase is connected and ready to send notifications.</div>`;
         } else {
-          statusEl.innerHTML = `<div class="status-banner banner-warn"><i class='bx bx-error'></i> Firebase is not configured. Push notifications are disabled. Add FIREBASE_CREDENTIALS_JSON to your environment.</div>`;
+          statusEl.innerHTML = `<div class="status-banner banner-warn" style="margin:0;"><i class='bx bx-error'></i> Firebase is not configured. Push notifications are disabled.</div>`;
         }
       } catch(e) {
         console.error('Failed to load notification stats', e);
@@ -2707,6 +2739,76 @@
           showCreativeToast('Network error.', 'bx-error-circle');
         }
       });
+    }
+
+    // Firebase Config Modal
+    function openFirebaseConfigModal() {
+      document.getElementById('firebaseJsonText').value = '';
+      document.getElementById('firebaseModalMsg').textContent = '';
+      document.getElementById('firebaseModal').classList.add('active');
+    }
+
+    async function saveFirebaseConfig() {
+      const jsonText = document.getElementById('firebaseJsonText').value.trim();
+      const msg = document.getElementById('firebaseModalMsg');
+      const btn = document.getElementById('btnSaveFirebase');
+
+      if (!jsonText) {
+        msg.className = 'modal-msg msg-err';
+        msg.textContent = 'Please paste the JSON content.';
+        return;
+      }
+
+      // Validate basic JSON structure
+      try {
+        const parsed = JSON.parse(jsonText);
+        if (parsed.type !== 'service_account') {
+          msg.className = 'modal-msg msg-err';
+          msg.textContent = 'Invalid JSON: Not a Firebase service account.';
+          return;
+        }
+      } catch (e) {
+        msg.className = 'modal-msg msg-err';
+        msg.textContent = 'Invalid JSON format.';
+        return;
+      }
+
+      // Encode Base64 robustly
+      let base64Creds;
+      try {
+        base64Creds = btoa(unescape(encodeURIComponent(jsonText)));
+      } catch(e) {
+        msg.className = 'modal-msg msg-err';
+        msg.textContent = 'Failed to encode JSON.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Saving...';
+      msg.textContent = '';
+
+      try {
+        const res = await apiFetch('/admin/notifications/config', {
+          method: 'PUT',
+          body: JSON.stringify({ credentials_json: base64Creds })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          showCreativeToast('Firebase configured successfully!');
+          closeModal('firebaseModal');
+          loadNotifStats(); // Reload stats to show ready state
+        } else {
+          msg.className = 'modal-msg msg-err';
+          msg.textContent = data.detail || 'Error saving configuration.';
+        }
+      } catch (e) {
+        msg.className = 'modal-msg msg-err';
+        msg.textContent = 'Network error.';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bx bx-save"></i> Save Configuration';
+      }
     }
   </script>
 </body>

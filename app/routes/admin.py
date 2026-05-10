@@ -1418,6 +1418,56 @@ async def get_notification_stats(
     }
 
 
+class FirebaseConfigRequest(BaseModel):
+    credentials_json: str  # Base64 encoded JSON
+
+
+@router.put("/notifications/config", summary="Update Firebase Credentials")
+async def update_firebase_config(
+    body: FirebaseConfigRequest,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    """Update Firebase credentials JSON in the database and reinitialize FCM."""
+    from app.models.settings import SystemSetting
+    from app.services.notification_service import init_firebase_from_db
+    
+    # 1. Update or create the setting in the database
+    result = await db.execute(
+        select(SystemSetting).where(SystemSetting.key == 'firebase_credentials_json')
+    )
+    setting = result.scalar_one_or_none()
+    
+    if setting:
+        setting.value = body.credentials_json
+        setting.updated_at = datetime.utcnow()
+    else:
+        setting = SystemSetting(
+            key='firebase_credentials_json',
+            value=body.credentials_json,
+            category='system',
+            description='Firebase Service Account JSON (Base64)',
+            is_secret=True
+        )
+        db.add(setting)
+        
+    await db.commit()
+    
+    # 2. Re-initialize Firebase Admin SDK dynamically
+    await init_firebase_from_db()
+    
+    from app.services.notification_service import is_firebase_ready
+    if not is_firebase_ready():
+        raise HTTPException(
+            status_code=400, 
+            detail="فشل تهيئة Firebase. تأكد إن الملف صالح (Invalid Service Account JSON)."
+        )
+        
+    return {"message": "✅ تم حفظ وتفعيل إعدادات Firebase بنجاح"}
+
+
+
+
 @router.post("/notifications/send", summary="Send a push notification")
 async def send_notification(
     body: SendNotificationRequest,

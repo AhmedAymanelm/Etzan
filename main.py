@@ -18,8 +18,8 @@ async def lifespan(app: FastAPI):
     # Create database tables on startup
     await init_db()
     # Initialize Firebase Admin SDK for push notifications
-    from app.services.notification_service import init_firebase
-    init_firebase()
+    from app.services.notification_service import init_firebase_from_db
+    await init_firebase_from_db()
     yield
 
 
