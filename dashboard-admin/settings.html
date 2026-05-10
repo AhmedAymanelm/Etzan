@@ -2810,6 +2810,10 @@
         btn.innerHTML = '<i class="bx bx-save"></i> Save Configuration';
       }
     }
+    
+    // Expose functions to global scope for HTML onclick handlers
+    window.openFirebaseConfigModal = openFirebaseConfigModal;
+    window.saveFirebaseConfig = saveFirebaseConfig;
   </script>
 </body>
 
