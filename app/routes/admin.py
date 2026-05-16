@@ -1535,7 +1535,7 @@ async def send_notification(
     await db.commit()
 
     return {
-        "message": f"✅ تم إرسال الإشعار — {success_count} نجح، {fail_count} فشل",
+        "message": "✅ تم إرسال الإشعار",
         "sent_count": success_count,
         "failed_count": fail_count,
         "invalid_tokens_removed": len(invalid_tokens),
