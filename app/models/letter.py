@@ -4,14 +4,14 @@ from typing import Literal
 
 
 class LetterAnalysisRequest(BaseModel):
-    """نموذج طلب تحليل علم الحرف"""
-    name: str = Field(..., min_length=1, description="الاسم العربي")
-    age: int = Field(..., gt=0, description="العمر (يجب أن يكون أكبر من 0)")
+    """Letter science analysis request model"""
+    name: str = Field(..., min_length=1, description="Arabic name")
+    age: int = Field(..., gt=0, description="Age (must be greater than 0)")
     
     @field_validator('name')
     @classmethod
     def validate_name(cls, v: str) -> str:
-        """التحقق من أن الاسم غير فارغ بعد إزالة المسافات وأن يكون بالعربية"""
+        """Validate that the name is not empty after stripping and is in Arabic"""
         cleaned = v.strip()
         if not cleaned:
             raise ValueError('الاسم لا يمكن أن يكون فارغًا')
@@ -22,14 +22,14 @@ class LetterAnalysisRequest(BaseModel):
     @field_validator('age')
     @classmethod
     def validate_age(cls, v: int) -> int:
-        """التحقق من أن العمر موجب"""
+        """Validate that the age is positive"""
         if v <= 0:
             raise ValueError('العمر يجب أن يكون أكبر من صفر')
         return v
 
 
 class LetterAnalysisResponse(BaseModel):
-    """نموذج نتيجة تحليل علم الحرف"""
+    """Letter science analysis response model"""
     name: str
     age: int
     letters_count: int
@@ -41,7 +41,7 @@ class LetterAnalysisResponse(BaseModel):
 
 
 class GuidanceDictionary(BaseModel):
-    """نموذج قاموس التوجيهات"""
+    """Guidance dictionary model"""
     spiritual: dict[str, str]
     behavioral: dict[str, str]
     physical: dict[str, str]
@@ -50,9 +50,9 @@ class GuidanceDictionary(BaseModel):
 # --- Admin Schemas ---
 
 class LetterGuidanceBase(BaseModel):
-    letter: str = Field(..., max_length=10, description="الحرف")
-    guidance_type: Literal["spiritual", "behavioral", "physical"] = Field(..., description="نوع التوجيه")
-    guidance_text: str = Field(..., description="نص التوجيه")
+    letter: str = Field(..., max_length=10, description="Letter")
+    guidance_type: Literal["spiritual", "behavioral", "physical"] = Field(..., description="Guidance type")
+    guidance_text: str = Field(..., description="Guidance text")
 
 
 class LetterGuidanceCreate(LetterGuidanceBase):

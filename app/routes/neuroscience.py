@@ -27,7 +27,6 @@ async def get_neuroscience_questionnaire(db: AsyncSession = Depends(get_db)):
     return await NeuroscienceService.get_questionnaire_from_db(db)
 
 
-import traceback
 from app.utils.settings_helper import get_env_or_db, get_random_setting_item
 
 @router.post("/submit", response_model=NeuroscienceAssessmentResult)

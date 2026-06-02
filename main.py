@@ -18,9 +18,9 @@ async def lifespan(app: FastAPI):
     # Create database tables on startup
     try:
         await init_db()
-        print("✅ Database initialized successfully!")
+        print("[STARTUP] Database initialized successfully!")
     except Exception as e:
-        print(f"❌❌❌ DATABASE CONNECTION FAILED ❌❌❌")
+        print(f"[ERROR] DATABASE CONNECTION FAILED")
         print(f"Error type: {type(e).__name__}")
         print(f"Error message: {e}")
         print(f"Make sure DATABASE_URL is correct and the database is reachable.")
@@ -30,27 +30,30 @@ async def lifespan(app: FastAPI):
         from app.services.notification_service import init_firebase_from_db
         await init_firebase_from_db()
     except Exception as e:
-        print(f"⚠️ Firebase init skipped: {e}")
+        print(f"[WARN] Firebase init skipped: {e}")
     yield
 
 
-# ── Rate Limiter ──────────────────────────────────────────────────────────────
+# Rate Limiter
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+
+# Disable API docs in production
+_enable_docs = os.getenv("ENABLE_DOCS", "false").lower() == "true"
 
 app = FastAPI(
     title="Mental Health Assessment API",
     description="API for psychology, neuroscience, letter science, astrology assessments, and comprehensive AI video generation",
     version="1.5.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if _enable_docs else None,
+    redoc_url="/redoc" if _enable_docs else None,
     lifespan=lifespan,
 )
 
-# ── Rate limit error handler ──────────────────────────────────────────────────
+# Rate limit error handler
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── CORS — allow all for production and mobile clients ─────────────────────────
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -124,8 +127,5 @@ if os.path.exists(dashboard_path):
 
 if __name__ == "__main__":
     import uvicorn
-    import os
     port = int(os.environ.get("PORT", 8000))
-    # Note: reload=True should be used for development, but it may cause issues with __name__ == "__main__" block
-    # Actually uvicorn.run("main:app", ...) is better for reload
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=port)

@@ -7,13 +7,13 @@ from ..models.letter_guidance import LetterGuidance
 
 
 class LetterService:
-    """خدمة منطق الأعمال لعلم الحرف"""
+    """Business logic service for letter science"""
     
     DEPENDENT_LETTERS = ["د", "ذ"]
     
     @classmethod
     def clean_name(cls, name: str) -> str:
-        """تنظيف الاسم: إزالة المسافات والاحتفاظ بالحروف فقط"""
+        """Clean name: remove spaces and keep only letters"""
 
         cleaned = name.replace(" ", "").strip()
         return cleaned
@@ -21,7 +21,7 @@ class LetterService:
     @classmethod
     def calculate_stage_and_letter(cls, name: str, age: int) -> Tuple[int, str, int]:
         """
-        حساب المرحلة والحرف الحاكم
+        Calculate stage and governing letter
         
         Returns:
             Tuple[int, str, int]: (stage, governing_letter, letters_count)
@@ -61,7 +61,7 @@ class LetterService:
     @classmethod
     def apply_dependency_rule(cls, governing_letter: str, name: str, stage: int) -> Tuple[str, bool]:
         """
-        تطبيق قاعدة التبعية
+        Apply dependency rule
         
         Returns:
             Tuple[str, bool]: (final_letter, is_dependent)
@@ -81,7 +81,7 @@ class LetterService:
     @classmethod
     async def get_guidance(cls, db: AsyncSession, letter: str) -> Tuple[str, str]:
         """
-        الحصول على التوجيه المناسب للحرف من قاعدة البيانات
+        Get appropriate guidance for the letter from the database
         
         Returns:
             Tuple[str, str]: (guidance_type, guidance_text)
@@ -129,7 +129,7 @@ class LetterService:
     
     @classmethod
     async def get_dictionary(cls, db: AsyncSession) -> GuidanceDictionary:
-        """إرجاع قاموس التوجيهات الكامل"""
+        """Return the complete guidance dictionary"""
         result = await db.execute(select(LetterGuidance))
         guidances = result.scalars().all()
         

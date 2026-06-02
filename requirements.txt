@@ -5,8 +5,6 @@ pydantic>=2.7.4
 httpx>=0.27.0
 openai>=1.12.0
 python-dotenv>=1.0.0
-moviepy>=1.0.3
-pandas>=2.0.0
 
 # Authentication dependencies
 sqlalchemy[asyncio]>=2.0.0
@@ -18,7 +16,6 @@ fastapi-mail>=1.4.1
 python-multipart>=0.0.12
 cloudinary>=1.36.0
 
-ffmpeg-python
 timezonefinder
 pytz
 firebase-admin>=6.0.0

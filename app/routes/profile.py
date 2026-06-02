@@ -31,7 +31,7 @@ async def update_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """تحديث الملف الشخصي - الصورة والاسم والتاريخ في endpoint واحد"""
+    """Update profile - photo, name, and date in a single endpoint"""
 
     if request.profile_picture_url is not None:
         current_user.profile_picture_url = request.profile_picture_url

@@ -397,7 +397,7 @@ async def fawaterk_webhook(request: Request, db: AsyncSession = Depends(get_db))
             verified_status = raw_v_status.lower()
             payment_method = fetched_data.get("payment_method", "")
         except Exception as e:
-            print(f"⚠️ Webhook: Failed to verify invoice {invoice_id} status via API: {e}")
+            print(f"[WARN] Webhook: Failed to verify invoice {invoice_id} status via API: {e}")
             return {"status": "ignored", "reason": "verification_failed"}
 
     # ── Find payment record ───────────────────────────────────────────────────
@@ -409,7 +409,7 @@ async def fawaterk_webhook(request: Request, db: AsyncSession = Depends(get_db))
     payment = result.scalar_one_or_none()
 
     if not payment:
-        print(f"⚠️ Webhook: no PaymentRecord found for session={invoice_id}")
+        print(f"[WARN] Webhook: no PaymentRecord found for session={invoice_id}")
         return {"status": "not_found"}
 
     # ── Map Fawaterk status → our status ──────────────────────────────────────
@@ -432,5 +432,5 @@ async def fawaterk_webhook(request: Request, db: AsyncSession = Depends(get_db))
     payment.updated_at = datetime.utcnow()
     await db.commit()
 
-    print(f"✅ Payment {payment.order_id} → {payment.status}")
+    print(f"[OK] Payment {payment.order_id} -> {payment.status}")
     return {"status": "ok", "order_id": payment.order_id, "new_status": payment.status}

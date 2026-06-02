@@ -35,16 +35,16 @@ async def analyze_letter(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    تحليل الاسم والعمر وحساب الحرف الحاكم والتوجيه المناسب
+    Analyze name and age to calculate governing letter and appropriate guidance
     
     Args:
-        request: الاسم والعمر
+        request: Name and age
     
     Returns:
-        LetterAnalysisResponse: نتيجة التحليل مع التوجيه المناسب
+        LetterAnalysisResponse: Analysis result with appropriate guidance
     
     Raises:
-        HTTPException: في حالة وجود خطأ في التحليل
+        HTTPException: If analysis fails
     """
     try:
         result = await LetterService.analyze(db, request)
@@ -67,10 +67,10 @@ async def analyze_letter(
 @router.get("/dictionary", response_model=GuidanceDictionary)
 async def get_guidance_dictionary(db: AsyncSession = Depends(get_db)):
     """
-    جلب قاموس التوجيهات الكامل (spiritual, behavioral, physical)
+    Get the complete guidance dictionary (spiritual, behavioral, physical)
     
     Returns:
-        GuidanceDictionary: قاموس التوجيهات الكامل
+        GuidanceDictionary: Complete guidance dictionary
     """
     return await LetterService.get_dictionary(db)
 
@@ -82,7 +82,7 @@ async def get_all_letter_guidances(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    """جلب جميع توجيهات الحروف للمشرفين"""
+    """Get all letter guidances for admins"""
     result = await db.execute(select(LetterGuidance).order_by(LetterGuidance.letter))
     return result.scalars().all()
 
@@ -93,7 +93,7 @@ async def add_letter_guidance(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    """إضافة توجيه حرف جديد"""
+    """Add a new letter guidance"""
     # Check if letter already exists
     existing = await db.execute(select(LetterGuidance).where(LetterGuidance.letter == guidance.letter))
     if existing.scalar_one_or_none():
@@ -113,7 +113,7 @@ async def update_letter_guidance(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    """تحديث توجيه حرف موجود"""
+    """Update an existing letter guidance"""
     result = await db.execute(select(LetterGuidance).where(LetterGuidance.id == guidance_id))
     db_guidance = result.scalar_one_or_none()
     
@@ -135,7 +135,7 @@ async def delete_letter_guidance(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    """حذف توجيه حرف"""
+    """Delete a letter guidance"""
     result = await db.execute(select(LetterGuidance).where(LetterGuidance.id == guidance_id))
     db_guidance = result.scalar_one_or_none()
     

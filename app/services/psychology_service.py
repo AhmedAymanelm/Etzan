@@ -8,73 +8,6 @@ from ..models.question import AssessmentQuestion
 class PsychologyService:
     """Business logic service for psychology assessment"""
     
-    # ── Fallback questions (used if DB has none) ─────────────────────────
-    QUESTIONS = [
-        {
-            "id": 1,
-            "text": "كيف هو نومك؟",
-            "options": [
-                "مريح ومنتظم",
-                "متقطع أحيانًا",
-                "سيئ أو غير منتظم"
-            ]
-        },
-        {
-            "id": 2,
-            "text": "إحساسك العام في يومك؟",
-            "options": [
-                "مرتاح ومتوازن",
-                "محتمل",
-                "مستنزف ومتعب"
-            ]
-        },
-        {
-            "id": 3,
-            "text": "الإحساس المسيطر عليك مؤخرًا؟",
-            "options": [
-                "هدوء واطمئنان",
-                "قلق أو توتر",
-                "حزن أو ثِقل نفسي"
-            ]
-        },
-        {
-            "id": 4,
-            "text": "قدرتك على الاستمتاع بالأشياء؟",
-            "options": [
-                "طبيعية",
-                "أقل من المعتاد",
-                "شبه معدومة"
-            ]
-        },
-        {
-            "id": 5,
-            "text": "مستوى القلق أو التفكير الزائد؟",
-            "options": [
-                "قليل",
-                "متوسط",
-                "شديد ومزعج"
-            ]
-        },
-        {
-            "id": 6,
-            "text": "طاقتك النفسية والجسدية؟",
-            "options": [
-                "جيدة",
-                "متوسطة",
-                "ضعيفة جدًا"
-            ]
-        },
-        {
-            "id": 7,
-            "text": "نظرتك لنفسك؟",
-            "options": [
-                "إيجابية أو متوازنة",
-                "متذبذبة",
-                "سلبية أو قاسية على نفسي"
-            ]
-        }
-    ]
-    
     LEVEL_MESSAGES = {
         "حالة مستقرة": (
             "حالتك النفسية مستقرة بشكل عام. استمر في الحفاظ على نمط حياة صحي، "
@@ -111,25 +44,13 @@ class PsychologyService:
         )
         db_questions = result.scalars().all()
         
-        if db_questions:
-            questions = [
-                Question(id=q.id, text=q.text, options=q.options)
-                for q in db_questions
-            ]
-        else:
-            # Fallback to hardcoded questions
-            questions = [Question(**q) for q in cls.QUESTIONS]
+        if not db_questions:
+            raise ValueError("No psychology questions found in database. Please seed questions first.")
         
-        return QuestionnaireResponse(
-            title="تقييم الحالة النفسية",
-            description="اختر الإجابة الأقرب لك خلال الأسبوع الأخير",
-            questions=questions
-        )
-    
-    @classmethod
-    def get_questionnaire(cls) -> QuestionnaireResponse:
-        """Return complete questionnaire with all questions (fallback/sync)"""
-        questions = [Question(**q) for q in cls.QUESTIONS]
+        questions = [
+            Question(id=q.id, text=q.text, options=q.options)
+            for q in db_questions
+        ]
         
         return QuestionnaireResponse(
             title="تقييم الحالة النفسية",

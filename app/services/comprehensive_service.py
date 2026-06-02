@@ -124,7 +124,7 @@ class ComprehensiveService:
 
 ---
 
-### 📊 نتائج التقييم النفسي:
+### نتائج التقييم النفسي:
 - **النتيجة:** {psychology_result.get('score', 'N/A')}/21
 - **المستوى:** {psychology_result.get('level', 'N/A')}
 - **التحليل:** {psychology_result.get('message', 'N/A')}
@@ -132,7 +132,7 @@ class ComprehensiveService:
 
 ---
 
-### 🧠 نتائج التقييم العصبي:
+### نتائج التقييم العصبي:
 - **النمط السائد:** {neuroscience_result.get('dominant', 'N/A')}
 - **النمط الثانوي:** {neuroscience_result.get('secondary', 'N/A')}
 - **قوة النمط الثانوي:** {'نعم' if neuroscience_result.get('strong_secondary') else 'لا'}
@@ -145,7 +145,7 @@ class ComprehensiveService:
 
 ---
 
-### ⭐ نتائج التحليل الفلكي:
+### نتائج التحليل الفلكي:
 - **البرج الشمسي:** {astrology_result.get('sun_sign', 'N/A')}
 - **الطالع:** {astrology_result.get('ascendant', 'N/A')}
 - **الحالة النفسية:** {astrology_result.get('psychological_state', 'N/A')}
@@ -161,7 +161,7 @@ class ComprehensiveService:
 
 ---
 
-{'### 📜 نتائج تحليل علم الحروف:' if letter_result else ''}
+{'### نتائج تحليل علم الحروف:' if letter_result else ''}
 {f"""- **الحرف الحاكم:** {letter_result.get('governing_letter', 'N/A')}
 - **المرحلة:** {letter_result.get('stage', 'N/A')}
 - **عدد الحروف:** {letter_result.get('letters_count', 'N/A')}
@@ -171,7 +171,7 @@ class ComprehensiveService:
 ---
 """ if letter_result else ''}
 
-### 📝 المطلوب منك:
+### المطلوب منك:
 
 اكتب تقريراً شاملاً متدفقاً **بدون أي عناوين أو أرقام أو نقاط أو تقسيمات** — فقرات متصلة فقط تُقرأ كرسالة شخصية حميمة.
 
@@ -185,7 +185,7 @@ class ComprehensiveService:
 - قدّم توصيات عملية ملموسة تستخدم لونه المحظوظ ({astrology_result.get('lucky_color', '')}) ورقمه المحظوظ ({astrology_result.get('lucky_number', '')}) والتوافق البرجي ({astrology_result.get('compatibility', '')})
 - اختم برسالة تمكينية قوية لا تُنسى
 
-### 📐 إرشادات الأسلوب الصارمة:
+### إرشادات الأسلوب الصارمة:
 - لا عناوين، لا أرقام، لا نقاط، لا نص غامق — فقرات متصلة فقط
 - تحدث كصديق حكيم يعرف الشخص جيداً
 - استخدم الاسم ({name}) عدة مرات بشكل طبيعي

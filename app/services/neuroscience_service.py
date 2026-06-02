@@ -52,108 +52,7 @@ class NeuroscienceService:
         )
     }
     
-    # ── Fallback questions (used if DB has none) ─────────────────────────
-    QUESTIONS = [
-        {
-            "id": 1,
-            "text": "شدّ العضلات الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "مرتخي في أغلب الجسم",
-                "B": "شدّ متوسط في أكثر من مكان",
-                "C": "شدّ قوي أو تيبّس واضح",
-                "D": "تهدئة ومحاولة استرخاء الآخرين أو النفس"
-            }
-        },
-        {
-            "id": 2,
-            "text": "حالة الفك والأسنان الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "الفك مرتخي",
-                "B": "شدّ بسيط",
-                "C": "شدّ قوي أو جزّ",
-                "D": "محاولة تهدئة أو تقليل التوتر"
-            }
-        },
-        {
-            "id": 3,
-            "text": "شكل الانتباه البصري الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "نظرة هادئة",
-                "B": "مراقبة نشطة",
-                "C": "تجمّد أو انسحاب بصري",
-                "D": "مراقبة الآخرين لاحتواء الموقف"
-            }
-        },
-        {
-            "id": 4,
-            "text": "حالة النبض الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "طبيعي",
-                "B": "أسرع قليلًا",
-                "C": "بطء أو تجمّد",
-                "D": "تغير حسب الآخرين"
-            }
-        },
-        {
-            "id": 5,
-            "text": "حالة الهضم الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "هادئ",
-                "B": "انزعاج بسيط",
-                "C": "انزعاج قوي",
-                "D": "تأثر حسب الحالة الاجتماعية"
-            }
-        },
-        {
-            "id": 6,
-            "text": "الدافع للحركة الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "حركة حاسمة ومباشرة",
-                "B": "رغبة قوية في الحركة",
-                "C": "انسحاب أو تجمّد",
-                "D": "تهدئة الوضع"
-            }
-        },
-        {
-            "id": 7,
-            "text": "مستوى الطاقة الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "طاقة حاسمة",
-                "B": "طاقة عالية",
-                "C": "طاقة منخفضة أو انسحاب",
-                "D": "طاقة موجهة للآخرين"
-            }
-        },
-        {
-            "id": 8,
-            "text": "وضوح الذهن الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "تركيز حاسم",
-                "B": "أفكار سريعة",
-                "C": "بطء أو تشوّش",
-                "D": "تركيز على الآخرين"
-            }
-        },
-        {
-            "id": 9,
-            "text": "الميل للتواصل الآن؟",
-            "options": ["A", "B", "C", "D"],
-            "options_text": {
-                "A": "مواجهة مباشرة",
-                "B": "تجنب عبر الانشغال",
-                "C": "انسحاب",
-                "D": "تهدئة الآخرين"
-            }
-        }
-    ]
+    # ── Fallback questions removed — seeded in DB via seed_default_questions() ──
     
     @classmethod
     async def get_questionnaire_from_db(cls, db: AsyncSession) -> NeuroscienceQuestionnaireResponse:
@@ -168,30 +67,18 @@ class NeuroscienceService:
         )
         db_questions = result.scalars().all()
         
-        if db_questions:
-            questions = [
-                NeuroscienceQuestion(
-                    id=q.id,
-                    text=q.text,
-                    options=q.options,
-                    options_text=q.options_text or {}
-                )
-                for q in db_questions
-            ]
-        else:
-            # Fallback to hardcoded questions
-            questions = [NeuroscienceQuestion(**q) for q in cls.QUESTIONS]
+        if not db_questions:
+            raise ValueError("No neuroscience questions found in database. Please seed questions first.")
         
-        return NeuroscienceQuestionnaireResponse(
-            title="تقييم الجهاز العصبي",
-            description="اختر الإجابة الأقرب لحالتك الآن",
-            questions=questions
-        )
-    
-    @classmethod
-    def get_questionnaire(cls) -> NeuroscienceQuestionnaireResponse:
-        """Return complete questionnaire with all questions (fallback/sync)"""
-        questions = [NeuroscienceQuestion(**q) for q in cls.QUESTIONS]
+        questions = [
+            NeuroscienceQuestion(
+                id=q.id,
+                text=q.text,
+                options=q.options,
+                options_text=q.options_text or {}
+            )
+            for q in db_questions
+        ]
         
         return NeuroscienceQuestionnaireResponse(
             title="تقييم الجهاز العصبي",

@@ -55,17 +55,17 @@ def init_firebase(creds_json: str = None):
             cred = credentials.Certificate(creds_path)
         else:
             logger.warning(
-                "⚠️  Firebase credentials not configured. "
+                "[WARN] Firebase credentials not configured. "
                 "Push notifications will be disabled."
             )
             return
 
         _firebase_app = firebase_admin.initialize_app(cred)
         _firebase_initialized = True
-        logger.info("✅ Firebase Admin SDK initialized successfully.")
+        logger.info("[OK] Firebase Admin SDK initialized successfully.")
 
     except Exception as e:
-        logger.error(f"❌ Firebase initialization failed: {e}")
+        logger.error(f"[ERROR] Firebase initialization failed: {e}")
         _firebase_initialized = False
 
 
@@ -182,7 +182,7 @@ async def send_push_notification(
             failure_count += len(batch_tokens)
 
     logger.info(
-        f"📨 Push notification sent: {success_count} success, "
+        f"[PUSH] Push notification sent: {success_count} success, "
         f"{failure_count} failed, {len(invalid_tokens)} invalid tokens"
     )
 

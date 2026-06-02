@@ -17,8 +17,8 @@ class BirthDataInput(BaseModel):
 
 
 class AstrologyRequest(BaseModel):
-    """نموذج طلب تحليل برج اليوم"""
-    name: str = Field(default="", description="اسم المستخدم (اختياري)")
+    """Daily horoscope analysis request model"""
+    name: str = Field(default="", description="User name (optional)")
     
     # New Top-level date/time fields for easier Flutter integration
     year: Optional[int] = Field(None, ge=1, le=9999)
@@ -31,14 +31,14 @@ class AstrologyRequest(BaseModel):
         default=None,
         description="Legacy support for birth_data object"
     )
-    birth_date: Optional[str] = Field(default=None, description="تاريخ الميلاد (مثال: 1998-01-15)")
-    birth_time: Optional[str] = Field(default=None, description="وقت الميلاد HH:MM")
-    city_of_birth: str = Field(default="", description="اسم مدينة الميلاد")
-    latitude: Optional[float] = Field(default=None, description="خط العرض (اختياري)")
-    longitude: Optional[float] = Field(default=None, description="خط الطول (اختياري)")
+    birth_date: Optional[str] = Field(default=None, description="Birth date (e.g. 1998-01-15)")
+    birth_time: Optional[str] = Field(default=None, description="Birth time HH:MM")
+    city_of_birth: str = Field(default="", description="City of birth name")
+    latitude: Optional[float] = Field(default=None, description="Latitude (optional)")
+    longitude: Optional[float] = Field(default=None, description="Longitude (optional)")
     day_type: Literal["today", "tomorrow", "yesterday"] = Field(
         default="today", 
-        description="نوع اليوم المطلوب تحليله"
+        description="Day type for analysis"
     )
     
     @field_validator('name')
@@ -90,7 +90,7 @@ class AstrologyRequest(BaseModel):
     @field_validator('birth_date')
     @classmethod
     def validate_birth_date(cls, v: Optional[str]) -> str:
-        """التحقق من تاريخ الميلاد وتوحيده إلى YYYY-MM-DD."""
+        """Validate and normalize birth date to YYYY-MM-DD."""
         if not v:
             raise ValueError('يجب إرسال birth_date أو birth_data')
         try:
@@ -100,21 +100,21 @@ class AstrologyRequest(BaseModel):
 
 
 class AstrologyResponse(BaseModel):
-    """نموذج نتيجة تحليل البرج اليومي"""
-    name: str = Field(default="", description="الاسم")
-    sun_sign: str = Field(..., description="البرج الشمسي")
-    moon_sign: str = Field(default="", description="البرج القمري")
-    ascendant: str = Field(default="", description="الطالع")
-    planets: Dict[str, str] = Field(default_factory=dict, description="مواقع باقي الكواكب")
+    """Daily horoscope analysis response model"""
+    name: str = Field(default="", description="Name")
+    sun_sign: str = Field(..., description="Sun sign")
+    moon_sign: str = Field(default="", description="Moon sign")
+    ascendant: str = Field(default="", description="Ascendant")
+    planets: Dict[str, str] = Field(default_factory=dict, description="Planet positions")
     birth_date: str
     day_type: str
-    psychological_state: str = Field(..., description="الحالة النفسية")
-    emotional_state: str = Field(..., description="الحالة العاطفية")
-    mental_state: str = Field(..., description="الحالة الذهنية")
-    physical_state: str = Field(..., description="الحالة الجسدية")
-    luck_level: str = Field(..., description="مستوى الحظ")
-    lucky_color: str = Field(..., description="اللون المحظوظ")
-    lucky_number: str = Field(..., description="الرقم المحظوظ")
-    compatibility: str = Field(..., description="التوافق")
-    advice: str = Field(..., description="النصيحة")
-    warning: str = Field(..., description="التحذير")
+    psychological_state: str = Field(..., description="Psychological state")
+    emotional_state: str = Field(..., description="Emotional state")
+    mental_state: str = Field(..., description="Mental state")
+    physical_state: str = Field(..., description="Physical state")
+    luck_level: str = Field(..., description="Luck level")
+    lucky_color: str = Field(..., description="Lucky color")
+    lucky_number: str = Field(..., description="Lucky number")
+    compatibility: str = Field(..., description="Compatibility")
+    advice: str = Field(..., description="Advice")
+    warning: str = Field(..., description="Warning")

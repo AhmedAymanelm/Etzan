@@ -104,7 +104,7 @@ async def generate_comprehensive_report(
                     detail="Payment session invalid or already used. Please complete a new payment."
                 )
             
-            # 🚨 BUG FIX: Mark as consumed immediately to prevent Replay Attacks and Race Conditions
+            # BUG FIX: Mark as consumed immediately to prevent Replay Attacks and Race Conditions
             payment.status = "CONSUMED"
             await db.commit()
         else:

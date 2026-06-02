@@ -9,9 +9,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     # Diagnostic print (safe version)
-    print("⚠️  DATABASE_URL not found in environment variables.")
+    print(" DATABASE_URL not found in environment variables.")
     raise RuntimeError(
-        "❌ DATABASE_URL is missing! \n"
+        " DATABASE_URL is missing! \n"
         "If you are on Railway/Heroku: Go to 'Variables' and add DATABASE_URL.\n"
         "If you are Local: Check if your .env file exists and has DATABASE_URL=..."
     )
@@ -37,7 +37,7 @@ if "@" in masked_url:
         proto_user, _ = prefix.rsplit(":", 1)
         masked_url = f"{proto_user}:****@{suffix}"
 
-print(f"🔌 Attempting connection to: {masked_url}")
+print(f"[DB] Attempting connection to: {masked_url}")
 
 import ssl as ssl_module
 ssl_ctx = ssl_module.create_default_context()
@@ -49,6 +49,9 @@ engine = create_async_engine(
     echo=False,
     pool_pre_ping=True,
     pool_recycle=300,
+    pool_size=10,
+    max_overflow=20,
+    pool_timeout=30,
     connect_args={"ssl": ssl_ctx}
 )
 
@@ -79,7 +82,7 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
-    print("✅ Database tables created/verified successfully.")
+    print("[DB] Database tables created/verified successfully.")
 
     # Seed default questions if table is empty
     await seed_default_questions()
@@ -146,7 +149,7 @@ async def seed_default_questions():
             ))
 
         await session.commit()
-        print("✅ Default assessment questions seeded successfully.")
+        print("[DB] Default assessment questions seeded successfully.")
 
 
 async def seed_default_letters():
@@ -196,4 +199,4 @@ async def seed_default_letters():
             session.add(LetterGuidance(letter=letter, guidance_type="physical", guidance_text=text))
 
         await session.commit()
-        print("✅ Default letter guidances seeded successfully.")
+        print("[DB] Default letter guidances seeded successfully.")

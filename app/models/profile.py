@@ -5,15 +5,15 @@ from pydantic import field_validator
 from app.utils.date_parser import parse_date_input
 
 class ProfilePictureUpdateRequest(BaseModel):
-    profile_picture_url: str = Field(..., description="رابط صورة الملف الشخصي")
+    profile_picture_url: str = Field(..., description="Profile picture URL")
 
 class NameUpdateRequest(BaseModel):
-    fullname: str = Field(..., description="الاسم الكامل للمستخدم")
+    fullname: str = Field(..., description="Full name")
 
 class BirthDetailsUpdateRequest(BaseModel):
-    date_of_birth: date = Field(..., description="تاريخ الميلاد")
-    city_of_birth: str = Field(..., description="اسم مدينة الميلاد")
-    time_of_birth: Optional[time] = Field(None, description="وقت الميلاد")
+    date_of_birth: date = Field(..., description="Date of birth")
+    city_of_birth: str = Field(..., description="City of birth")
+    time_of_birth: Optional[time] = Field(None, description="Time of birth")
 
     @field_validator("date_of_birth", mode="before")
     @classmethod
@@ -21,12 +21,12 @@ class BirthDetailsUpdateRequest(BaseModel):
         return parse_date_input(v)
 
 class ProfileUpdateRequest(BaseModel):
-    """طلب تحديث الملف الشخصي - كل الحقول اختيارية"""
-    profile_picture_url: Optional[str] = Field(None, description="رابط صورة الملف الشخصي")
-    fullname: Optional[str] = Field(None, description="الاسم الكامل للمستخدم")
-    date_of_birth: Optional[date] = Field(None, description="تاريخ الميلاد")
-    city_of_birth: Optional[str] = Field(None, description="اسم مدينة الميلاد")
-    time_of_birth: Optional[time] = Field(None, description="وقت الميلاد")
+    """Profile update request - all fields are optional"""
+    profile_picture_url: Optional[str] = Field(None, description="Profile picture URL")
+    fullname: Optional[str] = Field(None, description="Full name")
+    date_of_birth: Optional[date] = Field(None, description="Date of birth")
+    city_of_birth: Optional[str] = Field(None, description="City of birth")
+    time_of_birth: Optional[time] = Field(None, description="Time of birth")
 
     @field_validator("date_of_birth", mode="before")
     @classmethod

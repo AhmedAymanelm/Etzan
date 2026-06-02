@@ -10,7 +10,7 @@ from ..models.astrology import AstrologyRequest, AstrologyResponse
 from app.utils.settings_helper import get_env_or_db
 
 class AstrologyService:
-    """خدمة منطق الأعمال لعلم الفلك - التحديث الديناميكي باستخدام OpenAI"""
+    """Business logic service for astrology - dynamic analysis using OpenAI"""
     
     ASTROLOGY_API_BASE_DEFAULT = "https://api.astrology-api.io/api/v3"
 
@@ -129,7 +129,7 @@ class AstrologyService:
                                birth_time: Optional[str] = None, 
                                latitude: Optional[float] = None, 
                                longitude: Optional[float] = None) -> Dict[str, Any]:
-        """جلب بيانات الميلاد (Natal) مع عبور اليوم (Transits) بشكل منفصل."""
+        """Fetch natal birth data and daily transits separately."""
         
         birth_date = datetime.strptime(birth_date_str, "%Y-%m-%d")
         
@@ -233,7 +233,7 @@ class AstrologyService:
                     raise Exception("No transit positions in API response")
 
                 print(
-                    f"✅ فلك - Natal planets: {len(natal_planets)}, Transits: {len(transit_planets)}, "
+                    f"[ASTRO] Natal planets: {len(natal_planets)}, Transits: {len(transit_planets)}, "
                     f"Ascendant: {ascendant_sign or 'N/A'}, Day: {target_date.date().isoformat()}"
                 )
 
@@ -244,7 +244,7 @@ class AstrologyService:
                     "target_date": target_date.date().isoformat(),
                 }
         except Exception as e:
-            print(f"❌ خطأ في الـ API: {str(e)}")
+            print(f"[ERROR] Astrology API error: {str(e)}")
             zodiac_title = sign.title()
             fallback_natal = {
                 "Sun": {"zodiac": zodiac_title, "degree": 15.0},
@@ -276,7 +276,7 @@ class AstrologyService:
         ascendant_ar: str,
         target_date: str,
     ) -> Dict[str, str]:
-        """تحليل فلكي ديناميكي يجمع بين بيانات الميلاد (Natal) وعبور اليوم (Transits)."""
+        """Dynamic astrological analysis combining natal data and daily transits."""
         openai_api_key = await get_env_or_db("openai_api_key", "OPENAI_API_KEY")
         model = await get_env_or_db("openai_model", "OPENAI_MODEL") or "gpt-4o"
         
@@ -302,22 +302,22 @@ class AstrologyService:
 أنت منجم فلكي محترف مبدع في تحليل تأثير (حركة الكواكب اليوم - Transits) على المستخدم.
 لتجنب تضليل المستخدم، يجب التفرقة تماماً بين خريطته الشخصية (ثابتة) وحركة السماء اليوم (عابرة).
 
-📌 بيانات المستخدم الشخصية (Natal):
+بيانات المستخدم الشخصية (Natal):
 - البرج الشمسي الأساسي: {sun_sign_ar}
 - الطالع: {ascendant_ar if ascendant_ar else 'غير محدد'}
 
-📌 تاريخ التحليل المطلوب:
+تاريخ التحليل المطلوب:
 {target_date}
 
-📌 خريطة الميلاد الأصلية (Natal Positions):
+خريطة الميلاد الأصلية (Natal Positions):
 {natal_context}
 
-📌 حركة الكواكب الفعليّة في السماء لهذا اليوم (Current Transits):
+حركة الكواكب الفعليّة في السماء لهذا اليوم (Current Transits):
 {transit_context}
 
-💡 تعليمات صياغة صارمة جداً (Golden Rules):
-- ⚠️ إياك أن تذكر اسم البرج الذي يتواجد فيه الكوكب العابر حالياً. (مثال مرفوض ❌: "الزهرة في الثور تثير رغبتك...").
-- الأسلوب الصحيح ✅ أن تصف قوة وطاقة الكوكب العابر فقط دون تحديد مكانه، (مثال صحيح ✅: "تأثير طاقة الزهرة اليوم يعزز احتياجك للأمان...", "يدعم عبور المريخ اليوم نشاطك...").
+تعليمات صياغة صارمة جداً (Golden Rules):
+- إياك أن تذكر اسم البرج الذي يتواجد فيه الكوكب العابر حالياً. (مثال مرفوض: "الزهرة في الثور تثير رغبتك...").
+- الأسلوب الصحيح أن تصف قوة وطاقة الكوكب العابر فقط دون تحديد مكانه، (مثال صحيح: "تأثير طاقة الزهرة اليوم يعزز احتياجك للأمان...", "يدعم عبور المريخ اليوم نشاطك...").
 - اربط تأثير طاقات هذه الكواكب اليوم ببرجه الأساسي ({sun_sign_ar}) بذكاء.
 - الأهم: اجعل تحليل اليوم مختلفاً فعلياً حسب تاريخ التحليل {target_date} بناءً على Transits.
 - اجعل التحليل تفسيرياً، مرناً، وتجنب الادعاءات الفلكية المحددة بالأبراج العابرة.
@@ -347,7 +347,7 @@ class AstrologyService:
             result_text = response.choices[0].message.content
             return json.loads(result_text)
         except Exception as e:
-            print(f"❌ OpenAI Error in Astrology: {str(e)}")
+            print(f"[ERROR] OpenAI Error in Astrology: {str(e)}")
             # Fallback
             return {
                 "psychological_state": f"تأثير {sun_sign_ar} يمنحك اليوم تركيزاً عميقاً وطاقة داخلية.",
@@ -364,7 +364,7 @@ class AstrologyService:
 
     @classmethod
     async def analyze(cls, request: AstrologyRequest) -> AstrologyResponse:
-        """تحليل البرج اليومي وإرجاع التحليل باستخدام بيانات الـ API الممزوجة بالـ AI"""
+        """Analyze daily horoscope using API data combined with AI"""
         
         latitude = request.latitude
         longitude = request.longitude

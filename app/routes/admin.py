@@ -520,13 +520,13 @@ async def get_system_health(
             all_ok = False
         health_status[label] = {
             "configured": configured,
-            "status": "✓ Active" if configured else "✗ Missing"
+            "status": "Active" if configured else "Missing"
         }
 
     return {
         "overall": "healthy" if all_ok else "degraded",
         "services": health_status,
-        "platform": "Bayt Al Hayat (بيت الحياة) Admin Engine",
+        "platform": "Bayt Al Hayat Admin Engine",
         "checked_at": datetime.utcnow().isoformat()
     }
 
@@ -666,7 +666,7 @@ async def grant_admin(
         raise HTTPException(status_code=400, detail="User is already an admin")
     user.is_admin = True
     await db.commit()
-    return {"message": f"✅ {user.fullname} ({user.email}) is now an admin"}
+    return {"message": f"{user.fullname} ({user.email}) is now an admin"}
 
 
 @router.delete("/admins/revoke/{user_id}", summary="Revoke admin access from a user")
@@ -683,7 +683,7 @@ async def revoke_admin(
         raise HTTPException(status_code=400, detail="Cannot revoke your own admin access")
     user.is_admin = False
     await db.commit()
-    return {"message": f"❌ Admin access revoked for {user.fullname} ({user.email})"}
+    return {"message": f"Admin access revoked for {user.fullname} ({user.email})"}
 
 
 # ─── Settings: Pricing ────────────────────────────────────────────────────────
@@ -769,7 +769,7 @@ async def update_pricing_setting(
         setting_curr.updated_at = datetime.utcnow()
 
     await db.commit()
-    return {"message": f"✅ Pricing for {service_id.replace('_', ' ').title()} updated to {new_price:.2f} {new_currency}"}
+    return {"message": f"Pricing for {service_id.replace('_', ' ').title()} updated to {new_price:.2f} {new_currency}"}
 
 # ─── Settings: AI Models ────────────────────────────────────────────────────────
 
@@ -824,7 +824,7 @@ async def update_model_setting(
     setting.value = body.value
     setting.updated_at = datetime.utcnow()
     await db.commit()
-    return {"message": f"✅ '{setting.label}' updated successfully"}
+    return {"message": f"'{setting.label}' updated successfully"}
 
 
 @router.post("/settings/models/{key}/test", summary="Test an AI model connection")
@@ -1007,7 +1007,7 @@ async def update_fawaterk_settings(
                 updated.append(db_key)
 
     await db.commit()
-    return {"message": f"✅ Fawaterk gateway updated ({len(updated)} fields)"}
+    return {"message": f"Fawaterk gateway updated ({len(updated)} fields)"}
 
 
 # ─── Questions Management (CRUD) ──────────────────────────────────────────────
@@ -1077,7 +1077,7 @@ async def create_question(
     db.add(question)
     await db.commit()
     await db.refresh(question)
-    return {"message": "✅ Question added successfully", "question": question.to_dict()}
+    return {"message": "Question added successfully", "question": question.to_dict()}
 
 
 @router.put("/questions/{question_id}", summary="Update a question")
@@ -1107,7 +1107,7 @@ async def update_question(
     question.updated_at = datetime.utcnow()
     await db.commit()
     await db.refresh(question)
-    return {"message": "✅ Question updated successfully", "question": question.to_dict()}
+    return {"message": "Question updated successfully", "question": question.to_dict()}
 
 
 @router.delete("/questions/{question_id}", summary="Delete a question")
@@ -1143,7 +1143,7 @@ async def delete_question(
         q.order_index -= 1
 
     await db.commit()
-    return {"message": "✅ Question deleted successfully"}
+    return {"message": "Question deleted successfully"}
 
 
 @router.put("/questions/reorder/{assessment_type}", summary="Reorder questions")
@@ -1169,7 +1169,7 @@ async def reorder_questions(
             question.order_index = new_index
 
     await db.commit()
-    return {"message": f"✅ {assessment_type} questions reordered successfully"}
+    return {"message": f"{assessment_type} questions reordered successfully"}
 
 
 # ─── Subscription Management (Admin) ──────────────────────────────────────────
@@ -1241,7 +1241,7 @@ async def grant_subscription(
     await db.commit()
 
     return {
-        "message": f"✅ Subscription granted to {user.fullname} ({user.email}) — expires in 30 days",
+        "message": f"Subscription granted to {user.fullname} ({user.email}) -- expires in 30 days",
         "expires_at": sub.expires_at.isoformat()
     }
 
@@ -1274,7 +1274,7 @@ async def revoke_subscription(
         sub.expires_at = datetime.utcnow()
 
     await db.commit()
-    return {"message": f"❌ All active subscriptions revoked for {user.fullname} ({user.email})"}
+    return {"message": f"All active subscriptions revoked for {user.fullname} ({user.email})"}
 
 
 @router.post("/users/{user_id}/reset-free-trial", summary="Reset the free trial for a user")
@@ -1291,7 +1291,7 @@ async def reset_free_trial(
 
     user.free_trial_used = False
     await db.commit()
-    return {"message": f"✅ Free trial reset for {user.fullname} ({user.email})"}
+    return {"message": f"Free trial reset for {user.fullname} ({user.email})"}
 
 
 @router.get("/subscriptions/stats", summary="Get subscription statistics")
@@ -1456,10 +1456,10 @@ async def update_firebase_config(
     if not is_firebase_ready():
         raise HTTPException(
             status_code=400, 
-            detail="فشل تهيئة Firebase. تأكد إن الملف صالح (Invalid Service Account JSON)."
+            detail="Firebase initialization failed. Invalid Service Account JSON."
         )
         
-    return {"message": "✅ تم حفظ وتفعيل إعدادات Firebase بنجاح"}
+    return {"message": "Firebase credentials saved and activated successfully"}
 
 
 
@@ -1503,7 +1503,7 @@ async def send_notification(
     if not tokens:
         raise HTTPException(
             status_code=404,
-            detail="لا توجد أجهزة مسجلة للمستهدفين"  # No registered devices for targets
+            detail="No registered devices for targets"
         )
 
     # Send via FCM
@@ -1535,7 +1535,7 @@ async def send_notification(
     await db.commit()
 
     return {
-        "message": "✅ تم إرسال الإشعار",
+        "message": "Notification sent",
         "sent_count": success_count,
         "failed_count": fail_count,
         "invalid_tokens_removed": len(invalid_tokens),
@@ -1590,4 +1590,4 @@ async def delete_notification_log(
 
     await db.delete(log_entry)
     await db.commit()
-    return {"message": "✅ تم حذف سجل الإشعار"}
+    return {"message": "Notification log deleted"}
