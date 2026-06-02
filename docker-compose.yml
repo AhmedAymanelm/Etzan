@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    restart: always
+    environment:
+      - ENABLE_DOCS=false
+    # depends_on:
+    #   - db
+
+  # Optional: PostgreSQL Database (Uncomment if you want Docker to manage your database)
+  # db:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_USER: db_user
+  #     POSTGRES_PASSWORD: db_password
+  #     POSTGRES_DB: db_name
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: always
+
+# volumes:
+#   postgres_data:
