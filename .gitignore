@@ -35,3 +35,4 @@ cache/
 server.log
 *.log
 app.db
+*.db
