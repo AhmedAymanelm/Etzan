@@ -1,161 +1,98 @@
-<div align="center">
-  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI" />
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-  
-  <h1>🏛️ Bayt Al Hayat — Mental Wellness & Astrology App</h1>
-  <p>A comprehensive backend for AI-powered astrology, psychology, and neuroscience analysis with a fully-featured Admin Dashboard and payment integration.</p>
-</div>
+# Bayt Al Hayat - Backend API
 
----
+## Project Overview
+Bayt Al Hayat (House of Life) is an AI-driven platform for psychological, neurological, astrological, and letter science analysis. The backend provides robust RESTful APIs for user management, comprehensive assessments, payment processing via Fawaterk, and an integrated administrative dashboard.
 
-## 📝 Project Overview
+## Technical Stack
+- Framework: FastAPI (Python 3.11+)
+- Database: PostgreSQL (SQLAlchemy AsyncPG)
+- Authentication: JWT, bcrypt
+- AI Integrations: OpenAI API
+- Push Notifications: Firebase Cloud Messaging (FCM)
+- Containerization: Docker & Docker Compose
 
-**Bayt Al Hayat (House of Life)** is an AI-driven personality insights platform. It analyzes users through multiple lenses—psychological, neurological, and astrological—to generate deeply personalized reports. These reports are then transformed into cinematic, AI-generated video journeys, proving a unique and immersive self-discovery experience.
-
----
-
-## ✨ Features
-
-### 🧠 Core Sciences Analysis
-- **Psychology:** 7-question mental health evaluation mapped to deep psychological profiles.
-- **Neuroscience:** Analysis of nervous system responses (Fight, Flight, Freeze, Fawn).
-- **Astrology:** Real-time planetary placements and insights.
-- **Letter Science:** Ancient Arabic name-number (Abjad) analysis combined with age cycles.
-
-### 🎥 AI Video Generation
-- Generates dynamic narration scripts via **GPT-4o**.
-- Text-to-Speech (TTS) via **OpenAI HD Voices**.
-- Dynamic, segment-specific imagery generated via **Stability AI**.
-- Automatic montage stitching with Ken Burns effects via **FFmpeg**.
-
-### 🛠️ Complete Admin Dashboard
-- **Analytics:** Key Performance Indicators (KPIs) and user journey tracking.
-- **User Management:** View, ban, or delete users. Check their assessment history.
-- **Payment Gateway:** Fawaterk integration with a dynamic transaction dashboard.
-- **System Settings:** Update API keys, manage gateway modes, and toggle admin access securely from the UI.
-- **Notification System:** Push and in-app notifications targeting all or specific users with read tracking.
-
-### 🔐 Security & Auth
-- JWT based authentication for Users and Admins.
-- Secure standard password hashing (bcrypt).
-- Cloudinary integration for user avatars.
-- Rate-limiting enabled via `slowapi` to prevent abuse.
-
----
-
-## 🚀 Tech Stack
-
-- **Backend:** Python 3.12, FastAPI, Uvicorn, SQLAlchemy (AsyncPG)
-- **Database:** PostgreSQL (Neon DB recommended)
-- **GenAI APIs:** OpenAI (GPT-4o, TTS), Stability AI 
-- **Media Processing:** FFmpeg, Cloudinary
-- **Emails:** Brevo HTTP API
-- **Deployment:** Railway / Docker / Nixpacks
-
----
-
-## 📦 Local Setup & Installation
-
-### 1. Prerequisites
-- Python 3.12+
+## Prerequisites
+- Docker and Docker Compose (Recommended)
+- Python 3.11+ (If running locally without Docker)
 - PostgreSQL database
-- FFmpeg installed locally (`brew install ffmpeg` on Mac, `apt install ffmpeg` on Linux)
+- Valid API keys (OpenAI, Fawaterk, Firebase Admin SDK JSON)
 
-### 2. Clone the repository
-```bash
-git clone https://github.com/your-org/bayt-al-hayat.git
-cd bayt-al-hayat
-```
+## Running the Application
 
-### 3. Setup Virtual Environment
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+### 1. Environment Configuration
+Create a `.env` file in the root directory. At a minimum, you need the following variables:
 
-### 4. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Environment Variables
-Create a `.env` file in the root. Refer to `.env.example` if available, and ensure you have at minimum:
 ```env
-# Database
-DATABASE_URL=postgresql+asyncpg://user:pass@host/dbname
+# Database Configuration
+DATABASE_URL=postgresql+asyncpg://username:password@localhost:5432/baytalhayat
 
 # Security
-SECRET_KEY=your_super_secret_key
+SECRET_KEY=your_secure_random_string
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
 
-# APIs
+# External Integrations
 OPENAI_API_KEY=sk-...
-STABILITY_API_KEY=sk-...
-
-# 3rd Party
-CLOUDINARY_CLOUD_NAME=...
-CLOUDINARY_API_KEY=...
-CLOUDINARY_API_SECRET=...
-BREVO_API_KEY=...
 FAWATERK_API_KEY=...
+FAWATERK_MODE=test
 ```
 
-### 6. Create Initial Admin
-To access the Dashboard, you need an admin user:
+### 2. Starting with Docker (Production/Staging)
+The application is fully containerized. To build and start the server:
+
 ```bash
-python create_admin.py
+docker-compose up -d --build
 ```
-*(This will create `admin@baytalhayat.com` with password `123456`)*
-
-### 7. Run the Server
+This will start the FastAPI application on port 8000. To view the logs:
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-- **API Docs (Swagger):** `http://localhost:8000/docs`
-- **Admin Dashboard:** `http://localhost:8000/admin-ui/`
-
----
-
-## 🚂 Deployment (Railway)
-
-This repository is optimized for deployment on **Railway**. All configuration files (`railway.toml`, `Procfile`, `runtime.txt`) are already included.
-
-### Steps to Deploy:
-1. Push this repository to your GitHub account.
-2. Go to [Railway.app](https://railway.app/).
-3. Click **New Project** -> **Deploy from GitHub repo**.
-4. Select your repository.
-5. In the Railway project dashboard, go to **Variables** and paste the contents of your `.env` file (Make sure to remove the `+asyncpg` from Railway's default database string if connecting a Railway Postgres plugin, or just copy the raw string directly into `DATABASE_URL`).
-6. Railway will automatically detect the Python environment via `nixpacks` and install FFmpeg automatically.
-7. Once deployed, generate a public domain in Railway settings.
-8. **Done!**
-
----
-
-## 📂 Project Structure
-
-```text
-baytalhayat/
-├── main.py                 # FastAPI Application Entry
-├── create_admin.py         # Utility to seed the database with an Admin
-├── requirements.txt        # Python packages
-├── railway.toml / Procfile # Deployment instructions
-├── dashboard-admin/        # Static HTML/JS files for the Admin UI
-├── videos/                 # Temporarily storage for generated videos
-├── app/
-│   ├── auth/               # User registration, login, JWT logic
-│   ├── database.py         # SQLAlchemy Setup & DB Init
-│   ├── models/             # SQLAlchemy DB schemas
-│   ├── routes/             # FastAPI Route Definitions
-│   ├── schemas/            # Pydantic validation schemas
-│   └── services/           # Heavy lifting (AI logic, Video Gen, DB ops)
+docker-compose logs -f web
 ```
 
----
+### 3. Starting Locally (Development)
+If you prefer running the application without Docker during development:
 
-<div align="center">
-  <p><i>Developed with ❤️ for the future of mental well-being and personal insight.</i></p>
-</div>
+```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the server
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+## Project Architecture & Structure
+The codebase follows a modular design pattern to separate concerns between routing, business logic, and database operations.
+
+- `main.py`
+  The main entry point. Initializes the FastAPI instance, configures CORS, handles application lifespan (database initialization), and includes all routers.
+
+- `app/database.py`
+  Configures the SQLAlchemy asynchronous engine and connection pool. Contains `init_db` which automatically creates tables and seeds default assessment questions on startup.
+
+- `app/models/`
+  Contains all SQLAlchemy ORM models representing the database schema (e.g., users, payments, subscriptions, settings).
+
+- `app/schemas/`
+  Contains Pydantic models used for API request validation and response formatting.
+
+- `app/routes/`
+  Contains the API endpoints. Segmented by feature (e.g., `admin.py`, `payment.py`, `psychology.py`, `notification.py`).
+
+- `app/services/`
+  Contains the heavy lifting and business logic. External API calls (OpenAI), complex data manipulation, and scoring algorithms are placed here to keep the route files clean.
+
+- `app/auth/`
+  Handles authentication logic, JWT token generation/validation, and subscription enforcement middlewares.
+
+## Important Notes for Maintainers
+
+1. API Documentation: Swagger UI (/docs) is disabled when deployed using the provided docker-compose configuration for security purposes. To enable it locally, remove the `ENABLE_DOCS=false` environment variable.
+   
+2. Default Questions: Psychology and Neuroscience questions are dynamically seeded into the database upon startup. Do not hardcode questions into the service files.
+   
+3. Background Tasks: Email sending and certain heavy operations utilize FastAPI's native BackgroundTasks to prevent blocking API responses.
+   
+4. Code Cleanliness: The codebase has been stripped of emojis and localized Arabic comments to maintain standard UTF-8 encoding compliance and readability for non-Arabic speaking backend developers. Ensure all new logs and code comments remain in English.
