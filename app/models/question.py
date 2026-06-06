@@ -19,12 +19,22 @@ class AssessmentQuestion(Base):
 
     def to_dict(self):
         """Convert to dictionary for API responses"""
+        import json
+        # Ensure options is always a list
+        opts = self.options
+        if isinstance(opts, str):
+            try:
+                opts = json.loads(opts)
+            except (json.JSONDecodeError, TypeError):
+                opts = []
+        if not isinstance(opts, list):
+            opts = []
         result = {
             "id": self.id,
             "assessment_type": self.assessment_type,
             "order_index": self.order_index,
             "text": self.text,
-            "options": self.options,
+            "options": opts,
             "is_active": self.is_active,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

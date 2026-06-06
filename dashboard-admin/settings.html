@@ -1904,7 +1904,10 @@
         if (type === 'neuroscience' && q.options_text) {
           optionsHtml = Object.entries(q.options_text).map(([k, v]) => `<span style="font-size:0.75rem;background:var(--bg-body);padding:0.15rem 0.5rem;border-radius:4px;border:1px solid var(--border-color);white-space:nowrap;">${k}: ${v}</span>`).join(' ');
         } else if (q.options) {
-          optionsHtml = q.options.map(o => `<span style="font-size:0.75rem;background:var(--bg-body);padding:0.15rem 0.5rem;border-radius:4px;border:1px solid var(--border-color);white-space:nowrap;">${o}</span>`).join(' ');
+          let opts = q.options;
+          if (typeof opts === 'string') { try { opts = JSON.parse(opts); } catch(_) { opts = []; } }
+          if (!Array.isArray(opts)) opts = [];
+          optionsHtml = opts.map(o => `<span style="font-size:0.75rem;background:var(--bg-body);padding:0.15rem 0.5rem;border-radius:4px;border:1px solid var(--border-color);white-space:nowrap;">${o}</span>`).join(' ');
         }
 
         return `
@@ -1983,7 +1986,10 @@
         addBtn.style.display = 'flex';
         container.style.display = 'block';
         document.getElementById('qOptionsTextContainer').style.display = 'none';
-        q.options.forEach(opt => addOptionField(null, opt));
+        let editOpts = q.options;
+        if (typeof editOpts === 'string') { try { editOpts = JSON.parse(editOpts); } catch(_) { editOpts = []; } }
+        if (!Array.isArray(editOpts)) editOpts = [];
+        editOpts.forEach(opt => addOptionField(null, opt));
       }
 
       document.getElementById('questionModal').classList.add('show');
