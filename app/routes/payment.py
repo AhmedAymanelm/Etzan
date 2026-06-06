@@ -208,7 +208,7 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
         },
         "cartItems": [
             {
-                "name": f"اشتراك شهري - بيت الحياة",
+                "name": f"اشتراك شهري - Etzan",
                 "price": str(amount),
                 "quantity": "1"
             }

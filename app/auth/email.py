@@ -7,7 +7,7 @@ load_dotenv(override=True)
 # Brevo HTTP API (works on Railway - no SMTP port blocking)
 BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "sirahmedayman@gmail.com")
-MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "بيت الحياة")
+MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "Etzan")
 
 BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
@@ -40,7 +40,7 @@ async def send_reset_password_email(email_to: str, token: str):
     <div dir="rtl" style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f9f9f9; padding: 40px 20px;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <div style="background-color: #2c3e50; padding: 20px; text-align: center;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">بيت الحياة</h1>
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Etzan</h1>
             </div>
             <div style="padding: 40px 30px; text-align: center;">
                 <h2 style="color: #333333; margin-top: 0; margin-bottom: 20px; font-size: 22px;">إعادة تعيين كلمة المرور</h2>
@@ -56,9 +56,9 @@ async def send_reset_password_email(email_to: str, token: str):
                 </p>
             </div>
             <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-top: 1px solid #edf2f7;">
-                <p style="color: #a0aec0; font-size: 12px; margin: 0;">&copy; بيت الحياة. جميع الحقوق محفوظة.</p>
+                <p style="color: #a0aec0; font-size: 12px; margin: 0;">&copy; Etzan. جميع الحقوق محفوظة.</p>
             </div>
         </div>
     </div>
     """
-    await _send_email(email_to, "إعادة تعيين كلمة المرور - بيت الحياة", html)
+    await _send_email(email_to, "إعادة تعيين كلمة المرور - Etzan", html)

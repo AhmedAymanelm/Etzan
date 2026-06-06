@@ -541,7 +541,7 @@ async def get_system_health(
     return {
         "overall": "healthy" if all_ok else "degraded",
         "services": health_status,
-        "platform": "Bayt Al Hayat Admin Engine",
+        "platform": "Etzan Admin Engine",
         "checked_at": datetime.utcnow().isoformat()
     }
 

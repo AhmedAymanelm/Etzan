@@ -1,7 +1,7 @@
-# Bayt Al Hayat - Backend API
+# Etzan - Backend API
 
 ## Project Overview
-Bayt Al Hayat (House of Life) is an AI-driven platform for psychological, neurological, astrological, and letter science analysis. The backend provides robust RESTful APIs for user management, comprehensive assessments, payment processing via Fawaterk, and an integrated administrative dashboard.
+Etzan (House of Life) is an AI-driven platform for psychological, neurological, astrological, and letter science analysis. The backend provides robust RESTful APIs for user management, comprehensive assessments, payment processing via Fawaterk, and an integrated administrative dashboard.
 
 ## Technical Stack
 - Framework: FastAPI (Python 3.11+)
