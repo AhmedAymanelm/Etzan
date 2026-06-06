@@ -502,9 +502,15 @@ async def get_system_health(
 ):
     import os
 
+    # Check database: support both Postgres (DATABASE_URL) and SQLite (SQLITE_URL)
+    db_type = os.getenv("DB_TYPE", "postgres").lower()
+    if db_type == "sqlite":
+        db_configured = bool(os.getenv("SQLITE_URL"))
+    else:
+        db_configured = bool(os.getenv("DATABASE_URL") and len(os.getenv("DATABASE_URL")) > 3)
+
     keys_to_check = [
         ("OPENAI_API_KEY", "OpenAI"),
-        ("DATABASE_URL", "Database"),
         ("SECRET_KEY", "JWT Secret"),
         ("CLOUDINARY_CLOUD_NAME", "Cloudinary"),
         ("ASTROLOGY_API_KEY", "Astrology API"),
@@ -513,6 +519,15 @@ async def get_system_health(
 
     health_status = {}
     all_ok = True
+
+    # Add database status first
+    if not db_configured:
+        all_ok = False
+    health_status["Database"] = {
+        "configured": db_configured,
+        "status": "Active" if db_configured else "Missing"
+    }
+
     for env_key, label in keys_to_check:
         val = os.getenv(env_key)
         configured = bool(val and len(val) > 3)

@@ -1871,10 +1871,19 @@
       try {
         const res = await apiFetch(`/admin/questions/${type}`);
         if (!res) return;
-        _allQuestions = await res.json();
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `Server error (${res.status})`);
+        }
+        const data = await res.json();
+        if (!Array.isArray(data)) {
+          throw new Error(data.detail || 'Unexpected response format');
+        }
+        _allQuestions = data;
         renderQuestions();
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:1.5rem;">Failed to load questions.</td></tr>`;
+        console.error('loadQuestions error:', e);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:1.5rem;">Failed to load questions: ${e.message || 'Unknown error'}</td></tr>`;
       }
     }
 
@@ -2042,14 +2051,8 @@
 
       if (!text) { msg.textContent = 'Please enter question text.'; msg.className = 'modal-msg msg-err'; return; }
 
-      // Collect options
-      const optionInputs = document.querySelectorAll('.q-option-input');
-      const options = Array.from(optionInputs).map(inp => inp.value.trim()).filter(v => v);
-
-      if (options.length < 2) { msg.textContent = 'At least 2 options required.'; msg.className = 'modal-msg msg-err'; return; }
-
       // Build body
-      const body = { text, options };
+      const body = { text };
 
       // For neuroscience, use A/B/C/D as options and collect labels
       if (type === 'neuroscience') {
@@ -2060,6 +2063,13 @@
           options_text[inp.dataset.key] = inp.value.trim();
         });
         body.options_text = options_text;
+      } else {
+        // Collect options for psychology
+        const optionInputs = document.querySelectorAll('.q-option-input');
+        const options = Array.from(optionInputs).map(inp => inp.value.trim()).filter(v => v);
+
+        if (options.length < 2) { msg.textContent = 'At least 2 options required.'; msg.className = 'modal-msg msg-err'; return; }
+        body.options = options;
       }
 
       msg.textContent = 'Saving...'; msg.className = 'modal-msg';
