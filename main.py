@@ -79,49 +79,17 @@ os.makedirs("videos", exist_ok=True)
 app.mount("/media", StaticFiles(directory="videos"), name="media")
 
 
-@app.get("/")
-async def root():
-    """API root endpoint"""
-    return {
-        "message": "Mental Health Assessment API with AI Video Generation",
-        "version": "1.4.0",
-        "endpoints": {
-            "psychology": {
-                "get_questions": "GET /psychology",
-                "submit_answers": "POST /psychology/submit",
-                "generate_video": "POST /psychology/generate-video"
-            },
-            "neuroscience": {
-                "get_questions": "GET /neuroscience/questions",
-                "submit_answers": "POST /neuroscience/submit"
-            },
-            "letter": {
-                "analyze": "POST /letter/analyze",
-                "dictionary": "GET /letter/dictionary"
-            },
-            "astrology": {
-                "analyze": "POST /astrology/analyze",
-                "generate_video": "POST /astrology/generate-video"
-            },
-            "comprehensive": {
-                "submit_all": "POST /comprehensive/submit",
-                "generate_video": "POST /comprehensive/generate-video"
-            },
-            "documentation": "/docs"
-        }
-    }
-
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
 
-# Serve the Admin Dashboard on /admin-ui/
+# Serve the Admin Dashboard at root – must be LAST mount so API routes take priority
 current_dir = os.path.dirname(os.path.abspath(__file__))
 dashboard_path = os.path.join(current_dir, "dashboard-admin")
 if os.path.exists(dashboard_path):
-    app.mount("/admin-ui", StaticFiles(directory=dashboard_path, html=True), name="admin_dashboard")
+    app.mount("/", StaticFiles(directory=dashboard_path, html=True), name="admin_dashboard")
 
 
 

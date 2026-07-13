@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, extract, delete
@@ -242,7 +244,7 @@ async def get_users(
 
 @router.get("/users/{user_id}/details", summary="Get single user details + their assessments")
 async def get_user_details(
-    user_id: str,
+    user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -283,7 +285,7 @@ async def get_user_details(
 
 @router.post("/users/{user_id}/toggle-status", summary="Toggle user active status")
 async def toggle_user_status(
-    user_id: str,
+    user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -299,7 +301,7 @@ async def toggle_user_status(
 
 @router.delete("/users/{user_id}", summary="Delete a user and all their data")
 async def delete_user(
-    user_id: str,
+    user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -686,7 +688,7 @@ async def grant_admin(
 
 @router.delete("/admins/revoke/{user_id}", summary="Revoke admin access from a user")
 async def revoke_admin(
-    user_id: str,
+    user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -1232,7 +1234,7 @@ async def get_all_subscriptions(
 
 @router.post("/users/{user_id}/grant-subscription", summary="Grant a free 30-day subscription")
 async def grant_subscription(
-    user_id: str,
+    user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -1263,7 +1265,7 @@ async def grant_subscription(
 
 @router.post("/users/{user_id}/revoke-subscription", summary="Revoke all active subscriptions for a user")
 async def revoke_subscription(
-    user_id: str,
+    user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -1294,7 +1296,7 @@ async def revoke_subscription(
 
 @router.post("/users/{user_id}/reset-free-trial", summary="Reset the free trial for a user")
 async def reset_free_trial(
-    user_id: str,
+    user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
