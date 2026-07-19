@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, extract, delete
+from sqlalchemy import select, func, extract, delete, cast, String
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
@@ -248,7 +248,7 @@ async def get_user_details(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(cast(User.id, String) == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -289,7 +289,7 @@ async def toggle_user_status(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(cast(User.id, String) == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -305,7 +305,7 @@ async def delete_user(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(cast(User.id, String) == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -425,7 +425,7 @@ async def get_assessment_result(
     result = await db.execute(
         select(AssessmentHistory, User.email.label("user_email"), User.fullname)
         .join(User, AssessmentHistory.user_id == User.id)
-        .where(AssessmentHistory.id == assessment_id)
+        .where(cast(AssessmentHistory.id, String) == assessment_id)
     )
     item = result.first()
     if not item:
@@ -449,7 +449,7 @@ async def delete_assessment(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    result = await db.execute(select(AssessmentHistory).where(AssessmentHistory.id == assessment_id))
+    result = await db.execute(select(AssessmentHistory).where(cast(AssessmentHistory.id, String) == assessment_id))
     assessment = result.scalar_one_or_none()
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
@@ -692,7 +692,7 @@ async def revoke_admin(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(cast(User.id, String) == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -1239,7 +1239,7 @@ async def grant_subscription(
     admin: User = Depends(get_admin_user)
 ):
     """Admin manually grants a 30-day subscription without requiring payment."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(cast(User.id, String) == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -1270,7 +1270,7 @@ async def revoke_subscription(
     admin: User = Depends(get_admin_user)
 ):
     """Marks all active subscriptions for a user as inactive immediately."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(cast(User.id, String) == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -1301,7 +1301,7 @@ async def reset_free_trial(
     admin: User = Depends(get_admin_user)
 ):
     """Resets free_trial_used so the user gets another free analysis attempt."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(cast(User.id, String) == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

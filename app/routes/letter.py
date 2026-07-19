@@ -4,7 +4,8 @@ from sqlalchemy import select
 
 from app.database import get_db
 from app.auth.models import User
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, get_optional_current_user
+from typing import Optional
 from app.models.history import AssessmentHistory
 from app.models.letter_guidance import LetterGuidance
 
@@ -31,8 +32,8 @@ async def get_admin_user(current_user: User = Depends(get_current_user)):
 @router.post("/analyze", response_model=LetterAnalysisResponse)
 async def analyze_letter(
     request: LetterAnalysisRequest,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ):
     """
     Analyze name and age to calculate governing letter and appropriate guidance
@@ -50,14 +51,15 @@ async def analyze_letter(
         result = await LetterService.analyze(db, request)
         
         # Save to history
-        history_entry = AssessmentHistory(
-            user_id=current_user.id,
-            assessment_type="letter",
-            input_data=request.model_dump(),
-            result_data=result.model_dump()
-        )
-        db.add(history_entry)
-        await db.commit()
+        if current_user:
+            history_entry = AssessmentHistory(
+                user_id=current_user.id,
+                assessment_type="letter",
+                input_data=request.model_dump(),
+                result_data=result.model_dump()
+            )
+            db.add(history_entry)
+            await db.commit()
         
         return result
     except Exception as e:

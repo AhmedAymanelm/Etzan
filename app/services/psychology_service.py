@@ -47,8 +47,13 @@ class PsychologyService:
         if not db_questions:
             raise ValueError("No psychology questions found in database. Please seed questions first.")
         
+        import json
         questions = [
-            Question(id=q.id, text=q.text, options=q.options)
+            Question(
+                id=q.id, 
+                text=q.text, 
+                options=json.loads(q.options) if isinstance(q.options, str) else q.options
+            )
             for q in db_questions
         ]
         

@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.auth.models import User
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, get_optional_current_user
+from typing import Optional
 from app.models.history import AssessmentHistory
 
 from ..models.neuroscience import (
@@ -32,8 +33,8 @@ from app.utils.settings_helper import get_env_or_db, get_random_setting_item
 @router.post("/submit", response_model=NeuroscienceAssessmentResult)
 async def submit_neuroscience_answers(
     submission: NeuroscienceAnswersSubmission,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ):
     """
     Submit user answers and calculate neural pattern
@@ -58,14 +59,15 @@ async def submit_neuroscience_answers(
             result.background_music_url = music_url
         
         # Save to history
-        history_entry = AssessmentHistory(
-            user_id=current_user.id,
-            assessment_type="neuroscience",
-            input_data={"answers": submission.answers},
-            result_data=result.model_dump()
-        )
-        db.add(history_entry)
-        await db.commit()
+        if current_user:
+            history_entry = AssessmentHistory(
+                user_id=current_user.id,
+                assessment_type="neuroscience",
+                input_data={"answers": submission.answers},
+                result_data=result.model_dump()
+            )
+            db.add(history_entry)
+            await db.commit()
         
         return result
     except ValueError as e:

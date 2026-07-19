@@ -4,13 +4,47 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, cast, String
 
 from app.database import get_db
 from app.auth.models import User
 from app.auth.utils import decode_token
+from typing import Optional
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login/swagger")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="auth/login/swagger", auto_error=False)
+
+async def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: AsyncSession = Depends(get_db)
+) -> Optional[User]:
+    if not token:
+        return None
+        
+    try:
+        payload = decode_token(token)
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+            
+        token_type = payload.get("type")
+        if token_type != "access":
+            return None
+            
+    except JWTError:
+        return None
+        
+    # Use cast to String for SQLite compatibility (UUID stored as text)
+    result = await db.execute(
+        select(User).where(cast(User.id, String) == user_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if user is None or not user.is_active:
+        return None
+        
+    return user
+
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -39,7 +73,10 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
         
-    result = await db.execute(select(User).where(User.id == _uuid.UUID(user_id)))
+    # Use cast to String for SQLite compatibility (UUID stored as text)
+    result = await db.execute(
+        select(User).where(cast(User.id, String) == user_id)
+    )
     user = result.scalar_one_or_none()
     
     if user is None:
@@ -52,6 +89,3 @@ async def get_current_user(
         )
         
     return user
-
-
-

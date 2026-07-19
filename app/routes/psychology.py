@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional
 
 from app.database import get_db
 from app.auth.models import User
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, get_optional_current_user
 from app.models.history import AssessmentHistory
 
 from ..models.psychology import QuestionnaireResponse, AnswersSubmission, AssessmentResult
@@ -28,8 +28,8 @@ async def get_psychology_questionnaire(db: AsyncSession = Depends(get_db)):
 @router.post("/submit", response_model=AssessmentResult)
 async def submit_psychology_answers(
     submission: AnswersSubmission,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user)
 ):
     """
     Submit user answers and calculate result
@@ -47,14 +47,15 @@ async def submit_psychology_answers(
         result = PsychologyService.calculate_assessment(submission.answers)
         
         # Save to history
-        history_entry = AssessmentHistory(
-            user_id=current_user.id,
-            assessment_type="psychology",
-            input_data={"answers": submission.answers},
-            result_data=result.model_dump()
-        )
-        db.add(history_entry)
-        await db.commit()
+        if current_user:
+            history_entry = AssessmentHistory(
+                user_id=current_user.id,
+                assessment_type="psychology",
+                input_data={"answers": submission.answers},
+                result_data=result.model_dump()
+            )
+            db.add(history_entry)
+            await db.commit()
         
         return result
     except Exception as e:

@@ -70,12 +70,13 @@ class NeuroscienceService:
         if not db_questions:
             raise ValueError("No neuroscience questions found in database. Please seed questions first.")
         
+        import json
         questions = [
             NeuroscienceQuestion(
                 id=q.id,
                 text=q.text,
-                options=q.options,
-                options_text=q.options_text or {}
+                options=json.loads(q.options) if isinstance(q.options, str) else q.options,
+                options_text=json.loads(q.options_text) if isinstance(q.options_text, str) else (q.options_text or {})
             )
             for q in db_questions
         ]

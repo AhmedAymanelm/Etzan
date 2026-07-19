@@ -161,3 +161,76 @@ async def logout_route():
 async def get_me(current_user: User = Depends(get_current_user)):
     """Returns the currently authenticated user's profile"""
     return current_user
+
+
+@router.get("/debug-token", include_in_schema=False)
+async def debug_token(request: Request, db: AsyncSession = Depends(get_db)):
+    """TEMPORARY: Debug JWT token issues - REMOVE AFTER FIXING"""
+    import hashlib
+    import uuid as _uuid
+    from app.auth.utils import SECRET_KEY, ALGORITHM, decode_token
+    from jose import jwt, JWTError
+    from sqlalchemy import select, text
+    from app.auth.models import User
+    
+    auth_header = request.headers.get("authorization", "")
+    token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
+    
+    result = {
+        "auth_header_present": bool(auth_header),
+        "token_length": len(token),
+        "secret_key_hash": hashlib.sha256(SECRET_KEY.encode()).hexdigest()[:16] if SECRET_KEY else "NO_KEY",
+        "secret_key_length": len(SECRET_KEY) if SECRET_KEY else 0,
+    }
+    
+    if token:
+        try:
+            payload = decode_token(token)
+            result["decode_success"] = True
+            user_id = payload.get("sub")
+            result["user_id_from_token"] = user_id
+            
+            # Test 1: Query with UUID object
+            try:
+                r1 = await db.execute(select(User).where(User.id == _uuid.UUID(user_id)))
+                u1 = r1.scalar_one_or_none()
+                result["query_uuid_object"] = u1.email if u1 else "NOT FOUND"
+            except Exception as e1:
+                result["query_uuid_object"] = f"ERROR: {type(e1).__name__}: {e1}"
+            
+            # Test 2: Query with string
+            try:
+                r2 = await db.execute(select(User).where(User.id == user_id))
+                u2 = r2.scalar_one_or_none()
+                result["query_string"] = u2.email if u2 else "NOT FOUND"
+            except Exception as e2:
+                result["query_string"] = f"ERROR: {type(e2).__name__}: {e2}"
+            
+            # Test 3: Raw SQL query
+            try:
+                r3 = await db.execute(text("SELECT id, email, typeof(id) FROM users WHERE email = :email"), {"email": payload.get("email")})
+                row = r3.fetchone()
+                if row:
+                    result["raw_query"] = {"id": str(row[0]), "email": row[1], "id_type": row[2] if len(row) > 2 else "unknown"}
+                    result["id_repr"] = repr(row[0])
+                else:
+                    result["raw_query"] = "NOT FOUND"
+            except Exception as e3:
+                result["raw_query"] = f"ERROR: {type(e3).__name__}: {e3}"
+            
+            # Test 4: Count all users
+            try:
+                r4 = await db.execute(text("SELECT count(*) FROM users"))
+                result["total_users"] = r4.scalar()
+            except Exception as e4:
+                result["total_users"] = f"ERROR: {e4}"
+                
+        except JWTError as e:
+            result["decode_success"] = False
+            result["decode_error"] = str(e)
+        except Exception as e:
+            result["decode_success"] = False
+            result["decode_error"] = f"{type(e).__name__}: {e}"
+    
+    return result
+
