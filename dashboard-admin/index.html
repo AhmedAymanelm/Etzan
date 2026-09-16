@@ -65,7 +65,15 @@
 
         if (response.ok) {
           const data = await response.json();
-          // Store token
+
+          // Check if the user has admin privileges
+          if (!data.user || !data.user.is_admin) {
+            const lang = localStorage.getItem('dashboard_lang') || 'en';
+            alert(lang === 'ar' ? 'ليس لديك صلاحيات الدخول للوحة التحكم.' : 'You do not have admin access.');
+            return;
+          }
+
+          // Store token and redirect
           localStorage.setItem('admin_token', data.access_token);
           window.location.href = 'dashboard.html';
         } else {

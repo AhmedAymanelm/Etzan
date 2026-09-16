@@ -26,8 +26,10 @@ from app.auth.service import (
     verify_reset_code,
     reset_password,
     refresh_token_service,
+    verify_account,
     logout,
 )
+from app.auth.email import send_reset_password_email
 from app.auth.dependencies import get_current_user
 from app.auth.models import User
 from slowapi import Limiter
@@ -234,3 +236,12 @@ async def debug_token(request: Request, db: AsyncSession = Depends(get_db)):
     
     return result
 
+
+@router.get("/test-email")
+async def test_email_route():
+    try:
+        # Trying to send a test email synchronously (without background tasks) to see the exact error
+        await send_reset_password_email("sirahmedayman@gmail.com", "123456")
+        return {"success": True, "message": "تم إرسال الإيميل بنجاح، تفقد صندوق الوارد!"}
+    except Exception as e:
+        return {"success": False, "error": str(e), "message": "حدث خطأ أثناء الاتصال بـ Brevo!"}

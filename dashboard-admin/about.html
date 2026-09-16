@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About App - Etzan</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="styles.css?v=5" />
+  <script src="i18n.js?v=3"></script>
+  <style>
+    .table-card {
+      background: var(--bg-surface);
+      border-radius: 8px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .data-table th {
+      padding: 0.875rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--bg-body);
+    }
+
+    .table-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .btn-sm {
+      padding: 0.3rem 0.65rem;
+      border-radius: 5px;
+      border: 1px solid;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-info {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+
+    .btn-del {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-surface);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 600px;
+      max-width: 95vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-body);
+      color: var(--text-main);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 150px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo"><img src="logo.png" alt="Etzan" class="sidebar-logo-img" /><span class="sidebar-logo-text">Etzan</span></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span>Dashboard</span></a>
+        <div class="nav-divider"></div>
+        <a href="users.html" class="nav-item"><i class='bx bx-group'></i> <span>Users</span></a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span>Assessments</span></a>
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span>Payments</span></a>
+        <a href="team.html" class="nav-item"><i class='bx bx-id-card'></i> <span>فريق العمل</span></a>
+        <a href="about.html" class="nav-item active"><i class='bx bx-info-circle'></i> <span>عن التطبيق</span></a>
+        <div class="nav-divider"></div>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span>Settings</span></a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span>Logout</span></a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
+        </div>
+        <div class="header-right">
+          <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <div class="dashboard-header-info">
+          <div class="breadcrumb"><strong>عن التطبيق</strong> <span>|</span> <span>App Content Management</span></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-controls">
+            <h2 style="font-size: 1.1rem; font-weight: 600;">All Content Sections</h2>
+            <button class="btn-primary" onclick="openModal()"><i class='bx bx-plus'></i> Add Section</button>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Content Snippet</th>
+                <th>Order</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="aboutTableBody">
+              <tr>
+                <td colspan="4" style="text-align: center;"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="sectionModal">
+    <div class="modal-box">
+      <h3 id="modalTitle" style="margin-bottom: 1.5rem;">Add Content Section</h3>
+      <form id="sectionForm" onsubmit="saveSection(event)">
+        <input type="hidden" id="sectionId">
+        
+        <div class="form-group">
+          <label>Title (العنوان)</label>
+          <input type="text" id="sectionTitle" placeholder="e.g. من نحن, إخلاء المسؤولية" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Content (المحتوى النصي)</label>
+          <textarea id="sectionContent" required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Order (ترتيب العرض)</label>
+          <input type="number" id="sectionOrder" value="0">
+        </div>
+        
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+          <button type="button" class="btn-sm btn-del" style="padding: 0.6rem 1.2rem;" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveBtn">Save Section</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Creative Modal Overlay (For Confirmations) -->
+  <div class="creative-modal-overlay" id="creativeConfirmModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+    <div class="creative-modal-box" style="background: var(--bg-surface); border-radius: 24px; width: 90%; max-width: 400px; padding: 2.5rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
+      <div class="creative-modal-icon" style="width: 84px; height: 84px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 1.5rem; transform: rotate(-5deg);"><i class='bx bx-error-circle'></i></div>
+      <div class="creative-modal-title" id="ccmTitle" style="font-size: 1.6rem; font-weight: 900; color: var(--text-main); margin-bottom: 0.8rem; letter-spacing: -0.03em;">Are you sure?</div>
+      <div class="creative-modal-text" id="ccmText" style="font-size: 1rem; color: #64748b; line-height: 1.6; margin-bottom: 2.5rem;">This action cannot be undone.</div>
+      <div class="creative-modal-actions" style="display: flex; gap: 1rem;">
+        <button class="btn-sm" style="flex: 1; padding: 0.8rem; border-radius: 12px; font-weight: 700; background: var(--bg-body); color: var(--text-muted); border: none; cursor: pointer;" onclick="closeCreativeConfirm()">Cancel</button>
+        <button class="btn-sm" id="ccmConfirmBtn" style="flex: 1; padding: 0.8rem; border-radius: 12px; font-weight: 700; background: #ef4444; color: white; border: none; cursor: pointer;">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="creative-toast" id="creativeToast" style="position: fixed; bottom: 2rem; right: 2rem; background: white; border-left: 5px solid var(--primary-color); padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 1rem; z-index: 10000; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <div class="creative-toast-icon" style="font-size: 1.5rem; color: var(--primary-color);"><i class='bx bxs-check-circle'></i></div>
+    <div class="creative-toast-content" id="ctText" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Action successful</div>
+  </div>
+
+  <script src="app.js?v=4"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+      fetchSections();
+    });
+
+    async function fetchSections() {
+      const tbody = document.getElementById('aboutTableBody');
+      try {
+        const res = await apiFetch('/admin/about'); // Admin endpoint for full list
+        if (!res) return;
+        const data = await res.json();
+        renderSections(data);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Failed to load content sections. Ensure server is restarted!</td></tr>`;
+      }
+    }
+
+    function renderSections(sections) {
+      const tbody = document.getElementById('aboutTableBody');
+      if (!sections.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No sections found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = sections.map(s => `
+        <tr>
+          <td style="font-weight: 600;">${s.title}</td>
+          <td><div style="max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${s.content}">${s.content}</div></td>
+          <td>${s.order}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-sm btn-info" onclick="editSection('${s.id}', '${s.title.replace(/'/g, "\\'")}', '${s.content.replace(/'/g, "\\'").replace(/\n/g, '\\n')}', ${s.order})"><i class='bx bx-edit'></i> Edit</button>
+              <button class="btn-sm btn-del" onclick="deleteSection('${s.id}')"><i class='bx bx-trash'></i> Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openModal() {
+      document.getElementById('modalTitle').textContent = 'Add Content Section';
+      document.getElementById('sectionForm').reset();
+      document.getElementById('sectionId').value = '';
+      document.getElementById('sectionModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('sectionModal').classList.remove('show');
+    }
+
+    function editSection(id, title, content, order) {
+      document.getElementById('modalTitle').textContent = 'Edit Content Section';
+      document.getElementById('sectionId').value = id;
+      document.getElementById('sectionTitle').value = title;
+      document.getElementById('sectionContent').value = content;
+      document.getElementById('sectionOrder').value = order;
+      
+      document.getElementById('sectionModal').classList.add('show');
+    }
+
+    async function saveSection(e) {
+      e.preventDefault();
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      const id = document.getElementById('sectionId').value;
+      
+      const payload = {
+        title: document.getElementById('sectionTitle').value,
+        content: document.getElementById('sectionContent').value,
+        order: parseInt(document.getElementById('sectionOrder').value) || 0
+      };
+
+      try {
+        const url = id ? `/admin/about/${id}` : `/admin/about`;
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await apiFetch(url, {
+          method,
+          body: JSON.stringify(payload)
+        });
+
+        if (res && res.ok) {
+          closeModal();
+          showCreativeToast(id ? 'Section updated successfully!' : 'Section added successfully!');
+          fetchSections();
+        } else if (res) {
+          const err = await res.json();
+          showCreativeToast(err.detail || 'Failed to save section.', 'bx-error-circle', '#ef4444');
+        }
+      } catch (err) {
+        showCreativeToast('An error occurred. Make sure the server was restarted.', 'bx-error-circle', '#ef4444');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Section';
+      }
+    }
+
+    async function deleteSection(id) {
+      showCreativeConfirm('Delete Section?', 'Are you sure you want to delete this section? This action is permanent.', async () => {
+        try {
+          const res = await apiFetch(`/admin/about/${id}`, { method: 'DELETE' });
+          if (res && res.ok) {
+            showCreativeToast('Section deleted successfully!');
+            fetchSections();
+          } else {
+            showCreativeToast('Failed to delete section', 'bx-error-circle', '#ef4444');
+          }
+        } catch (err) {
+          showCreativeToast('An error occurred', 'bx-error-circle', '#ef4444');
+        }
+      });
+    }
+
+    // ── Creative UI Helpers ──────────────────────────────────────────────────
+    let _onConfirmCallback = null;
+    function showCreativeConfirm(title, text, callback) {
+      document.getElementById('ccmTitle').textContent = title;
+      document.getElementById('ccmText').textContent = text;
+      _onConfirmCallback = callback;
+      
+      const modal = document.getElementById('creativeConfirmModal');
+      modal.style.display = 'flex';
+      setTimeout(() => modal.style.opacity = '1', 10);
+      
+      const btn = document.getElementById('ccmConfirmBtn');
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener('click', () => {
+        closeCreativeConfirm();
+        if (_onConfirmCallback) _onConfirmCallback();
+      });
+    }
+
+    function closeCreativeConfirm() {
+      const modal = document.getElementById('creativeConfirmModal');
+      modal.style.opacity = '0';
+      setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    function showCreativeToast(text, icon = 'bxs-check-circle', color = 'var(--primary-color)') {
+      const toast = document.getElementById('creativeToast');
+      document.getElementById('ctText').textContent = text;
+      toast.style.borderLeftColor = color;
+      const iconEl = toast.querySelector('i');
+      iconEl.className = 'bx ' + icon;
+      iconEl.parentElement.style.color = color;
+      
+      toast.style.transform = 'translateX(0)';
+      setTimeout(() => toast.style.transform = 'translateX(120%)', 3500);
+    }
+  </script>
+</body>
+</html>

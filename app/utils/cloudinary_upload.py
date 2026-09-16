@@ -47,3 +47,34 @@ async def upload_audio_to_cloudinary(file: UploadFile, folder: str = "neuro_patt
         # Cleanup temp file
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
+
+async def upload_image_to_cloudinary(file: UploadFile, folder: str = "team_members") -> str:
+    """
+    Uploads an image file to Cloudinary and returns the secure URL.
+    """
+    init_cloudinary()
+
+    temp_file_path = f"/tmp/{uuid.uuid4()}_{file.filename}"
+    
+    try:
+        content = await file.read()
+        with open(temp_file_path, 'wb') as out_file:
+            out_file.write(content)
+                
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: cloudinary.uploader.upload(
+                temp_file_path, 
+                folder=folder, 
+                resource_type="image"
+            )
+        )
+        
+        return response['secure_url']
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cloudinary upload error: {str(e)}")
+    finally:
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)

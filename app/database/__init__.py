@@ -30,6 +30,7 @@ async def init_db():
     from app.models.letter_guidance import LetterGuidance
     from app.models.device_token import UserDeviceToken
     from app.models.notification import NotificationLog
+    from app.models.goal import DailyGoal, UserNote
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

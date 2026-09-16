@@ -50,6 +50,7 @@ class UserResponse(BaseModel):
     city_of_birth: str
     time_of_birth: Optional[time] = None
     is_active: bool
+    is_admin: bool
     is_verified: bool
     profile_picture_url: Optional[str] = None
     created_at: datetime

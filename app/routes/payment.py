@@ -43,8 +43,9 @@ async def _get_fawaterk_config():
     """Returns all Fawaterk config from DB (or env fallback)."""
     api_key = await _get_setting("fawaterk_api_key", "FAWATERK_API_KEY")
     mode    = await _get_setting("fawaterk_mode",    "FAWATERK_MODE", "test")
+    status  = await _get_setting("fawaterk_status",  "", "active")
     base    = "https://staging.fawaterk.com" if mode == "test" else "https://app.fawaterk.com"
-    return api_key, mode, base
+    return api_key, mode, base, status
 
 
 async def _create_subscription_for_user(user_id, payment_record_id, db: AsyncSession):
@@ -147,7 +148,11 @@ async def get_payment_methods():
     """
     Fetch all enabled payment methods from Fawaterk for the connected account.
     """
-    api_key, _, api_base = await _get_fawaterk_config()
+    api_key, _, api_base, status = await _get_fawaterk_config()
+    
+    if status != "active":
+        return {"data": []}  # Return empty if payments are disabled
+
     if not api_key:
         raise HTTPException(status_code=500, detail="Fawaterk API key is not configured")
 
@@ -173,7 +178,10 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
     Create a Fawaterk Payment Invoice for a monthly subscription.
     The amount and currency are securely fetched from the database settings to prevent client-side tampering.
     """
-    api_key, mode, api_base = await _get_fawaterk_config()
+    api_key, mode, api_base, status = await _get_fawaterk_config()
+
+    if status != "active":
+        raise HTTPException(status_code=403, detail="Payments are currently disabled by the administrator")
 
     if not api_key:
         raise HTTPException(status_code=500, detail="Fawaterk credentials are not configured")
@@ -279,7 +287,7 @@ async def verify_payment(session_id: str, current_user: User = Depends(get_curre
     Verifies the payment session status with Fawaterk, updates the DB,
     and creates a UserSubscription if the payment is confirmed.
     """
-    api_key, _, api_base = await _get_fawaterk_config()
+    api_key, _, api_base, status = await _get_fawaterk_config()
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
@@ -331,7 +339,7 @@ async def get_payment_status(session_id: str):
     """
     Get the status of a Fawaterk Payment Invoice.
     """
-    api_key, _, api_base = await _get_fawaterk_config()
+    api_key, _, api_base, status = await _get_fawaterk_config()
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
@@ -377,7 +385,7 @@ async def fawaterk_webhook(request: Request, db: AsyncSession = Depends(get_db))
         return {"status": "ignored", "reason": "no_invoice_id"}
 
     # ── Security check: Fetch actual invoice status from Fawaterk API ---------
-    api_key, _, api_base = await _get_fawaterk_config()
+    api_key, _, api_base, status = await _get_fawaterk_config()
     if not api_key:
         return {"status": "ignored", "reason": "no_api_key"}
 

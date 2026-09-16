@@ -8,6 +8,10 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.routes import psychology_router, neuroscience_router, letter_router, astrology_router, comprehensive_router, history_router, admin_router, payment_router, profile_router, notification_router
+from app.routes.team import router as team_router, admin_router as admin_team_router
+from app.routes.about import router as about_router, admin_router as admin_about_router
+from app.routes.statistics import router as statistics_router
+from app.routes.goal import router as goal_router
 from app.auth import auth_router
 from app.database import init_db
 import os
@@ -73,6 +77,12 @@ app.include_router(history_router)
 app.include_router(admin_router)
 app.include_router(payment_router)
 app.include_router(notification_router)
+app.include_router(team_router)
+app.include_router(admin_team_router)
+app.include_router(about_router)
+app.include_router(admin_about_router)
+app.include_router(statistics_router)
+app.include_router(goal_router)
 
 # Serve generated media files (audio/video)
 os.makedirs("videos", exist_ok=True)

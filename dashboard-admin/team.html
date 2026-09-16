@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team - Etzan</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="styles.css?v=5" />
+  <script src="i18n.js?v=3"></script>
+  <style>
+    .table-card {
+      background: var(--bg-surface);
+      border-radius: 8px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .data-table th {
+      padding: 0.875rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--bg-body);
+    }
+
+    .table-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .btn-sm {
+      padding: 0.3rem 0.65rem;
+      border-radius: 5px;
+      border: 1px solid;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-info {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+
+    .btn-del {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .team-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #f3f4f6;
+      border: 2px solid var(--border-color);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-surface);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 500px;
+      max-width: 95vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-body);
+      color: var(--text-main);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.02);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--primary-color);
+      background: rgba(var(--primary-rgb), 0.05);
+    }
+
+    .upload-zone i {
+      font-size: 2.5rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-zone p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .image-preview-wrapper {
+      margin-top: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .image-preview-wrapper img {
+      height: 80px;
+      border-radius: 8px;
+      border: 2px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo"><img src="logo.png" alt="Etzan" class="sidebar-logo-img" /><span class="sidebar-logo-text">Etzan</span></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span>Dashboard</span></a>
+        <div class="nav-divider"></div>
+        <a href="users.html" class="nav-item"><i class='bx bx-group'></i> <span>Users</span></a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span>Assessments</span></a>
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span>Payments</span></a>
+        <a href="team.html" class="nav-item active"><i class='bx bx-id-card'></i> <span>فريق العمل</span></a>
+        <a href="about.html" class="nav-item"><i class='bx bx-info-circle'></i> <span>عن التطبيق</span></a>
+        <div class="nav-divider"></div>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span>Settings</span></a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span>Logout</span></a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
+        </div>
+        <div class="header-right">
+          <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <div class="dashboard-header-info">
+          <div class="breadcrumb"><strong>فريق العمل</strong> <span>|</span> <span>Team Management</span></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-controls">
+            <h2 style="font-size: 1.1rem; font-weight: 600;">All Team Members</h2>
+            <button class="btn-primary" onclick="openModal()"><i class='bx bx-plus'></i> Add Member</button>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Description</th>
+                <th>Order</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teamTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center;"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="memberModal">
+    <div class="modal-box">
+      <h3 id="modalTitle" style="margin-bottom: 1.5rem;">Add Team Member</h3>
+      <form id="memberForm" onsubmit="saveMember(event)">
+        <input type="hidden" id="memberId">
+        
+        <div class="form-group">
+          <label>Name (الاسم)</label>
+          <input type="text" id="memberName" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Role (المسمى الوظيفي)</label>
+          <input type="text" id="memberRole">
+        </div>
+        
+        <div class="form-group">
+          <label>Description (النبذة)</label>
+          <textarea id="memberDesc"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Order (ترتيب العرض)</label>
+          <input type="number" id="memberOrder" value="0">
+        </div>
+        
+        <div class="form-group">
+          <label>Image (الصورة)</label>
+          <div class="upload-zone">
+            <i class='bx bx-cloud-upload'></i>
+            <p>Click or drag image to upload</p>
+            <input type="file" id="memberImage" accept="image/*" onchange="previewSelectedImage(event)">
+          </div>
+          <div id="currentImagePreview" class="image-preview-wrapper"></div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+          <button type="button" class="btn-sm btn-del" style="padding: 0.6rem 1.2rem;" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveBtn">Save Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Creative Modal Overlay (For Confirmations) ── -->
+  <div class="creative-modal-overlay" id="creativeConfirmModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+    <div class="creative-modal-box" style="background: var(--bg-surface); border-radius: 24px; width: 90%; max-width: 400px; padding: 2.5rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
+      <div class="creative-modal-icon" style="width: 84px; height: 84px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 1.5rem; transform: rotate(-5deg);"><i class='bx bx-error-circle'></i></div>
+      <div class="creative-modal-title" id="ccmTitle" style="font-size: 1.6rem; font-weight: 900; color: var(--text-main); margin-bottom: 0.8rem; letter-spacing: -0.03em;">Are you sure?</div>
+      <div class="creative-modal-text" id="ccmText" style="font-size: 1rem; color: #64748b; line-height: 1.6; margin-bottom: 2.5rem;">This action cannot be undone.</div>
+      <div class="creative-modal-actions" style="display: flex; gap: 1rem;">
+        <button class="btn-sm" style="flex: 1; padding: 0.8rem; border-radius: 12px; font-weight: 700; background: var(--bg-body); color: var(--text-muted); border: none; cursor: pointer;" onclick="closeCreativeConfirm()">Cancel</button>
+        <button class="btn-sm" id="ccmConfirmBtn" style="flex: 1; padding: 0.8rem; border-radius: 12px; font-weight: 700; background: #ef4444; color: white; border: none; cursor: pointer;">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="creative-toast" id="creativeToast" style="position: fixed; bottom: 2rem; right: 2rem; background: white; border-left: 5px solid var(--primary-color); padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 1rem; z-index: 10000; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <div class="creative-toast-icon" style="font-size: 1.5rem; color: var(--primary-color);"><i class='bx bxs-check-circle'></i></div>
+    <div class="creative-toast-content" id="ctText" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Action successful</div>
+  </div>
+
+  <script src="app.js?v=4"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+      fetchTeam();
+    });
+
+    async function fetchTeam() {
+      const tbody = document.getElementById('teamTableBody');
+      try {
+        const res = await apiFetch('/team'); // public endpoint
+        if (!res) return;
+        const data = await res.json();
+        renderTeam(data);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Failed to load team members. Ensure server is restarted!</td></tr>`;
+      }
+    }
+
+    function renderTeam(members) {
+      const tbody = document.getElementById('teamTableBody');
+      if (!members.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No team members found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = members.map(m => `
+        <tr>
+          <td><img src="${m.image_url || 'logo.png'}" class="team-avatar" /></td>
+          <td style="font-weight: 600;">${m.name}</td>
+          <td>${m.role || '-'}</td>
+          <td><div style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${m.description}">${m.description || '-'}</div></td>
+          <td>${m.order}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-sm btn-info" onclick="editMember('${m.id}', '${m.name.replace(/'/g, "\\'")}', '${(m.role || '').replace(/'/g, "\\'")}', '${(m.description || '').replace(/'/g, "\\'")}', ${m.order}, '${m.image_url || ''}')"><i class='bx bx-edit'></i> Edit</button>
+              <button class="btn-sm btn-del" onclick="deleteMember('${m.id}')"><i class='bx bx-trash'></i> Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openModal() {
+      document.getElementById('modalTitle').textContent = 'Add Team Member';
+      document.getElementById('memberForm').reset();
+      document.getElementById('memberId').value = '';
+      document.getElementById('currentImagePreview').innerHTML = '';
+      document.getElementById('memberModal').classList.add('show');
+    }
+
+    function previewSelectedImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('currentImagePreview').innerHTML = `<img src="${e.target.result}" />`;
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('memberModal').classList.remove('show');
+    }
+
+    function editMember(id, name, role, desc, order, imgUrl) {
+      document.getElementById('modalTitle').textContent = 'Edit Team Member';
+      document.getElementById('memberId').value = id;
+      document.getElementById('memberName').value = name;
+      document.getElementById('memberRole').value = role;
+      document.getElementById('memberDesc').value = desc;
+      document.getElementById('memberOrder').value = order;
+      
+      if (imgUrl) {
+        document.getElementById('currentImagePreview').innerHTML = `<img src="${imgUrl}" style="height:50px; border-radius:8px;" />`;
+      } else {
+        document.getElementById('currentImagePreview').innerHTML = '';
+      }
+      
+      document.getElementById('memberModal').classList.add('show');
+    }
+
+    async function saveMember(e) {
+      e.preventDefault();
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      const id = document.getElementById('memberId').value;
+      const formData = new FormData();
+      formData.append('name', document.getElementById('memberName').value);
+      
+      const role = document.getElementById('memberRole').value;
+      if(role) formData.append('role', role);
+      
+      const desc = document.getElementById('memberDesc').value;
+      if(desc) formData.append('description', desc);
+      
+      formData.append('order', document.getElementById('memberOrder').value);
+      
+      const fileInput = document.getElementById('memberImage');
+      if (fileInput.files[0]) {
+        formData.append('image', fileInput.files[0]);
+      }
+
+      try {
+        const token = localStorage.getItem("admin_token");
+        const url = id ? `${window.API_URL}/admin/team/${id}` : `${window.API_URL}/admin/team`;
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        if (res.ok) {
+          closeModal();
+          showCreativeToast(id ? 'Member updated successfully!' : 'Member added successfully!');
+          fetchTeam();
+        } else {
+          const err = await res.json();
+          showCreativeToast(err.detail || 'Failed to save team member. Did you restart the server?', 'bx-error-circle', '#ef4444');
+        }
+      } catch (err) {
+        showCreativeToast('An error occurred. Make sure the server was restarted.', 'bx-error-circle', '#ef4444');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Member';
+      }
+    }
+
+    async function deleteMember(id) {
+      showCreativeConfirm('Delete Member?', 'Are you sure you want to delete this team member? This action is permanent.', async () => {
+        try {
+          const res = await apiFetch(`/admin/team/${id}`, { method: 'DELETE' });
+          if (res && res.ok) {
+            showCreativeToast('Member deleted successfully!');
+            fetchTeam();
+          } else {
+            showCreativeToast('Failed to delete team member', 'bx-error-circle', '#ef4444');
+          }
+        } catch (err) {
+          showCreativeToast('An error occurred', 'bx-error-circle', '#ef4444');
+        }
+      });
+    }
+
+    // ── Creative UI Helpers ──────────────────────────────────────────────────
+    let _onConfirmCallback = null;
+    function showCreativeConfirm(title, text, callback) {
+      document.getElementById('ccmTitle').textContent = title;
+      document.getElementById('ccmText').textContent = text;
+      _onConfirmCallback = callback;
+      
+      const modal = document.getElementById('creativeConfirmModal');
+      modal.style.display = 'flex';
+      setTimeout(() => modal.style.opacity = '1', 10);
+      
+      const btn = document.getElementById('ccmConfirmBtn');
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener('click', () => {
+        closeCreativeConfirm();
+        if (_onConfirmCallback) _onConfirmCallback();
+      });
+    }
+
+    function closeCreativeConfirm() {
+      const modal = document.getElementById('creativeConfirmModal');
+      modal.style.opacity = '0';
+      setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    function showCreativeToast(text, icon = 'bxs-check-circle', color = 'var(--primary-color)') {
+      const toast = document.getElementById('creativeToast');
+      document.getElementById('ctText').textContent = text;
+      toast.style.borderLeftColor = color;
+      const iconEl = toast.querySelector('i');
+      iconEl.className = 'bx ' + icon;
+      iconEl.parentElement.style.color = color;
+      
+      toast.style.transform = 'translateX(0)';
+      setTimeout(() => toast.style.transform = 'translateX(120%)', 3500);
+    }
+  </script>
+</body>
+</html>

@@ -24,6 +24,7 @@ async def get_optional_current_user(
     try:
         payload = decode_token(token)
         user_id: str = payload.get("sub")
+        email: str = payload.get("email")
         if user_id is None:
             return None
             
@@ -34,10 +35,19 @@ async def get_optional_current_user(
     except JWTError:
         return None
         
-    # Use cast to String for SQLite compatibility (UUID stored as text)
-    result = await db.execute(
-        select(User).where(cast(User.id, String) == user_id)
-    )
+    # Convert user_id string to UUID object for proper comparison
+    try:
+        uid = _uuid.UUID(user_id)
+    except (ValueError, AttributeError):
+        return None
+    if email:
+        result = await db.execute(
+            select(User).where(User.email == email)
+        )
+    else:
+        result = await db.execute(
+            select(User).where(User.id == uid)
+        )
     user = result.scalar_one_or_none()
     
     if user is None or not user.is_active:
@@ -56,36 +66,9 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    try:
-        payload = decode_token(token)
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-            
-        token_type = payload.get("type")
-        if token_type != "access":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="نوع الرمز غير صالح. يرجى استخدام رمز وصول.",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-            
-    except JWTError:
-        raise credentials_exception
-        
-    # Use cast to String for SQLite compatibility (UUID stored as text)
-    result = await db.execute(
-        select(User).where(cast(User.id, String) == user_id)
-    )
-    user = result.scalar_one_or_none()
+    user = await get_optional_current_user(token, db)
     
     if user is None:
         raise credentials_exception
-        
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="مستخدم غير نشط"
-        )
         
     return user
