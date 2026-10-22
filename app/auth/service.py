@@ -112,13 +112,20 @@ async def forget_password(data: ForgetPasswordRequest, background_tasks: Backgro
     # Generate 6-digit reset code (15 min expiry)
     reset_code = create_verification_code()
     
-    # Save code to user
-    user.verification_code = reset_code
-    user.verification_code_expires_at = datetime.utcnow() + timedelta(minutes=15)
-    db.add(user)
+    # Save code to user using direct SQL update to avoid StaleDataError
+    from sqlalchemy import update
+    await db.execute(
+        update(User)
+        .where(User.id == user.id)
+        .values(
+            verification_code=reset_code,
+            verification_code_expires_at=datetime.utcnow() + timedelta(minutes=15)
+        )
+    )
     await db.commit()
 
     # Send reset password email in background
+    print(f"[DEV] Reset code for {user.email}: {reset_code}")  # للتيست المحلي
     background_tasks.add_task(send_reset_password_email, user.email, reset_code)
 
     return {
