@@ -181,10 +181,18 @@ async def reset_password(data: ResetPasswordRequest, db: AsyncSession) -> dict:
             detail="انتهت صلاحية رمز التحقق"
         )
 
-    # Update password and clear code
-    user.hashed_password = hash_password(data.new_password)
-    user.verification_code = None
-    user.verification_code_expires_at = None
+    # Update password and clear code using direct SQL to avoid StaleDataError
+    from sqlalchemy import update as sql_update
+    await db.execute(
+        sql_update(User)
+        .where(User.email == data.email)
+        .values(
+            hashed_password=hash_password(data.new_password),
+            verification_code=None,
+            verification_code_expires_at=None
+        )
+        .execution_options(synchronize_session="fetch")
+    )
     await db.commit()
 
     return {"message": "تم إعادة تعيين كلمة المرور بنجاح"}
