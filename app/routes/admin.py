@@ -306,6 +306,33 @@ async def toggle_user_status(
     return {"message": f"User is now {'Active' if new_status else 'Inactive'}", "is_active": new_status}
 
 
+class ChangePasswordRequest(BaseModel):
+    new_password: str
+
+@router.post("/users/{user_id}/change-password", summary="Change user password (Admin)")
+async def admin_change_user_password(
+    user_id: uuid.UUID,
+    body: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    result = await db.execute(select(User).where(cast(User.id, String) == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    from app.auth.service import hash_password
+    from sqlalchemy import update as sql_update
+    await db.execute(
+        sql_update(User)
+        .where(User.email == user.email)
+        .values(hashed_password=hash_password(body.new_password))
+        .execution_options(synchronize_session="fetch")
+    )
+    await db.commit()
+    return {"message": f"تم تغيير كلمة المرور للمستخدم {user.fullname} بنجاح"}
+
+
 @router.delete("/users/{user_id}", summary="Delete a user and all their data")
 async def delete_user(
     user_id: uuid.UUID,

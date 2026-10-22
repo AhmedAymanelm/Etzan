@@ -546,6 +546,7 @@
             ? `<button class="btn-sm btn-warn" onclick="toggleStatus('${u.id}', '${name}')" title="Block"><i class='bx bx-block'></i></button>`
             : `<button class="btn-sm btn-info" onclick="toggleStatus('${u.id}', '${name}')" title="Activate"><i class='bx bx-check'></i></button>`
           }
+                <button class="btn-sm" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;" onclick="changePassword('${u.id}', '${name}')" title="Change Password"><i class='bx bx-key'></i></button>
                 <button class="btn-sm btn-del" onclick="deleteUser('${u.id}', '${name}')" title="Delete"><i class='bx bx-trash'></i></button>
               </div>
             </td>
@@ -643,6 +644,37 @@
       });
     }
 
+    function changePassword(userId, name) {
+      document.getElementById('cpUserId').value = userId;
+      document.getElementById('cpUserName').textContent = name;
+      document.getElementById('cpNewPassword').value = '';
+      document.getElementById('changePasswordModal').classList.add('show');
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('changePasswordModal').classList.remove('show');
+    }
+
+    async function submitChangePassword() {
+      const userId = document.getElementById('cpUserId').value;
+      const newPassword = document.getElementById('cpNewPassword').value.trim();
+      if (!newPassword || newPassword.length < 6) {
+        showCreativeToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'bx-error-circle');
+        return;
+      }
+      const res = await apiFetch(`/admin/users/${userId}/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_password: newPassword })
+      });
+      if (res && res.ok) {
+        showCreativeToast('✅ تم تغيير كلمة المرور بنجاح!');
+        closeChangePasswordModal();
+      } else {
+        showCreativeToast('فشل تغيير كلمة المرور', 'bx-error-circle');
+      }
+    }
+
     // ── Creative UI Helpers ──────────────────────────────────────────────────
     let _onConfirmCallback = null;
     function showCreativeConfirm(title, text, callback) {
@@ -674,6 +706,24 @@
       setTimeout(() => toast.classList.remove('show'), 3500);
     }
   </script>
+
+<!-- Change Password Modal -->
+<div class="modal-overlay" id="changePasswordModal" style="display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)closeChangePasswordModal()">
+  <div class="modal-box" style="max-width:420px;width:90%;padding:2rem;border-radius:16px;background:var(--bg-surface);">
+    <h3 style="margin-bottom:0.5rem;font-size:1.1rem;">🔑 تغيير كلمة المرور</h3>
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;">المستخدم: <strong id="cpUserName"></strong></p>
+    <input type="hidden" id="cpUserId">
+    <div style="margin-bottom:1rem;">
+      <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:0.4rem;">كلمة المرور الجديدة</label>
+      <input type="password" id="cpNewPassword" placeholder="أدخل كلمة المرور الجديدة..." style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-main);color:var(--text-main);font-size:0.9rem;">
+    </div>
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+      <button onclick="closeChangePasswordModal()" style="padding:0.5rem 1.2rem;border:1px solid var(--border-color);border-radius:8px;background:transparent;color:var(--text-main);cursor:pointer;">إلغاء</button>
+      <button onclick="submitChangePassword()" style="padding:0.5rem 1.2rem;border:none;border-radius:8px;background:#5b21b6;color:#fff;cursor:pointer;font-weight:600;">حفظ</button>
+    </div>
+  </div>
+</div>
+
 </body>
 
 </html>
