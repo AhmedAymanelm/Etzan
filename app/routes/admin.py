@@ -294,9 +294,16 @@ async def toggle_user_status(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user.is_active = not user.is_active
+    from sqlalchemy import update as sql_update
+    new_status = not user.is_active
+    await db.execute(
+        sql_update(User)
+        .where(User.email == user.email)
+        .values(is_active=new_status)
+        .execution_options(synchronize_session="fetch")
+    )
     await db.commit()
-    return {"message": f"User is now {'Active' if user.is_active else 'Inactive'}", "is_active": user.is_active}
+    return {"message": f"User is now {'Active' if new_status else 'Inactive'}", "is_active": new_status}
 
 
 @router.delete("/users/{user_id}", summary="Delete a user and all their data")
