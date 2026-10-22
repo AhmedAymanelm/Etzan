@@ -538,16 +538,16 @@
             <td style="font-size:0.8rem;color:var(--text-muted);">${date}</td>
             <td>${statusBadge}</td>
             <td>
-              <div class="actions-cell">
-                <button class="btn-sm btn-info" onclick="viewUser('${u.id}')" title="View"><i class='bx bx-show'></i></button>
-                <button class="btn-sm btn-info" style="background:#d1fae5;color:#065f46;border-color:#a7f3d0;" onclick="grantSub('${u.id}', '${name}')" title="Grant Subscription"><i class='bx bx-star'></i></button>
-                <button class="btn-sm btn-warn" onclick="resetTrial('${u.id}', '${name}')" title="Reset Trial"><i class='bx bx-reset'></i></button>
+              <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;align-items:center;">
+                <button class="btn-sm btn-info" onclick="viewUser('${u.id}')" title="عرض التفاصيل"><i class='bx bx-show'></i></button>
+                <button class="btn-sm" style="background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;" onclick="grantSub('${u.id}', '${name}')" title="منح اشتراك"><i class='bx bx-star'></i></button>
+                <button class="btn-sm btn-warn" onclick="resetTrial('${u.id}', '${name}')" title="إعادة تجربة"><i class='bx bx-reset'></i></button>
                 ${u.is_active
-            ? `<button class="btn-sm btn-warn" onclick="toggleStatus('${u.id}', '${name}')" title="Block"><i class='bx bx-block'></i></button>`
-            : `<button class="btn-sm btn-info" onclick="toggleStatus('${u.id}', '${name}')" title="Activate"><i class='bx bx-check'></i></button>`
-          }
-                <button class="btn-sm" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;" onclick="changePassword('${u.id}', '${name}')" title="Change Password"><i class='bx bx-key'></i></button>
-                <button class="btn-sm btn-del" onclick="deleteUser('${u.id}', '${name}')" title="Delete"><i class='bx bx-trash'></i></button>
+                  ? `<button class="btn-sm btn-warn" onclick="toggleStatus('${u.id}', '${name}')" title="حظر"><i class='bx bx-block'></i></button>`
+                  : `<button class="btn-sm btn-info" onclick="toggleStatus('${u.id}', '${name}')" title="تفعيل"><i class='bx bx-check'></i></button>`
+                }
+                <button class="btn-sm" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;" onclick="changePassword('${u.id}', '${name}')" title="تغيير كلمة المرور"><i class='bx bx-key'></i></button>
+                <button class="btn-sm btn-del" onclick="deleteUser('${u.id}', '${name}')" title="حذف"><i class='bx bx-trash'></i></button>
               </div>
             </td>
           </tr>
