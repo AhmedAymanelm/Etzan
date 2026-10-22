@@ -104,6 +104,18 @@ async def get_service_price(service_type: str = "monthly_subscription"):
     }
 
 
+
+@payment_router.get("/gateway-status", summary="Check if payment gateway is available")
+async def get_gateway_status():
+    """
+    Returns whether the payment gateway (Fawaterk) is active or not.
+    No authentication required.
+    """
+    _, _, _, status = await _get_fawaterk_config()
+    is_available = status.lower() == "active"
+    return {"available": is_available, "status": status}
+
+
 @payment_router.get("/subscription-status")
 async def get_subscription_status(
     current_user: User = Depends(get_current_user),
