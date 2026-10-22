@@ -41,8 +41,8 @@ async def lifespan(app: FastAPI):
 # Rate Limiter
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
-# Disable API docs in production
-_enable_docs = os.getenv("ENABLE_DOCS", "false").lower() == "true"
+# Enable API docs (set ENABLE_DOCS=false in .env to disable)
+_enable_docs = os.getenv("ENABLE_DOCS", "true").lower() == "true"
 
 app = FastAPI(
     title="Mental Health Assessment API",
