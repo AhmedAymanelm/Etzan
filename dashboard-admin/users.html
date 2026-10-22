@@ -138,8 +138,11 @@
 
     .actions-cell {
       display: flex;
-      gap: 0.4rem;
+      flex-direction: row !important;
       flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      min-width: 180px;
     }
 
     .avatar-sm {
@@ -538,7 +541,7 @@
             <td style="font-size:0.8rem;color:var(--text-muted);">${date}</td>
             <td>${statusBadge}</td>
             <td>
-              <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;align-items:center;">
+              <div class="actions-cell">
                 <button class="btn-sm btn-info" onclick="viewUser('${u.id}')" title="عرض التفاصيل"><i class='bx bx-show'></i></button>
                 <button class="btn-sm" style="background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;" onclick="grantSub('${u.id}', '${name}')" title="منح اشتراك"><i class='bx bx-star'></i></button>
                 <button class="btn-sm btn-warn" onclick="resetTrial('${u.id}', '${name}')" title="إعادة تجربة"><i class='bx bx-reset'></i></button>
