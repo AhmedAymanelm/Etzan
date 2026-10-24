@@ -1754,3 +1754,84 @@ async def admin_list_checkin_responses(
     )
     responses = result.scalars().all()
     return [r.to_dict() for r in responses]
+
+
+@router.get("/daily-checkin/stats", summary="Get daily check-in analytics (Admin)")
+async def admin_checkin_stats(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    from app.models.daily_checkin import DailyCheckInResponse, DailyCheckInQuestion
+    from datetime import date, timedelta
+    import json
+
+    today = date.today()
+
+    # Total responses
+    total_res = await db.execute(select(func.count()).select_from(DailyCheckInResponse))
+    total_responses = total_res.scalar() or 0
+
+    # Today's responses
+    today_res = await db.execute(
+        select(func.count()).select_from(DailyCheckInResponse)
+        .where(DailyCheckInResponse.date == today)
+    )
+    today_responses = today_res.scalar() or 0
+
+    # Unique users total
+    unique_res = await db.execute(
+        select(func.count(DailyCheckInResponse.user_id.distinct()))
+        .select_from(DailyCheckInResponse)
+    )
+    unique_users = unique_res.scalar() or 0
+
+    # Last 7 days daily counts
+    daily_counts = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        cnt_res = await db.execute(
+            select(func.count()).select_from(DailyCheckInResponse)
+            .where(DailyCheckInResponse.date == day)
+        )
+        cnt = cnt_res.scalar() or 0
+        daily_counts.append({"date": str(day), "count": cnt})
+
+    # Get all responses for answer distribution
+    all_responses_res = await db.execute(
+        select(DailyCheckInResponse).order_by(DailyCheckInResponse.date.desc()).limit(500)
+    )
+    all_responses = all_responses_res.scalars().all()
+
+    # Per-question answer distribution
+    questions_res = await db.execute(
+        select(DailyCheckInQuestion).where(DailyCheckInQuestion.is_active == True)
+        .order_by(DailyCheckInQuestion.order_index)
+    )
+    questions = questions_res.scalars().all()
+
+    question_stats = []
+    for q in questions:
+        option_counts = {opt: 0 for opt in (q.options or [])}
+        for r in all_responses:
+            answers = r.answers if isinstance(r.answers, dict) else {}
+            ans = answers.get(str(q.id))
+            if ans and ans in option_counts:
+                option_counts[ans] += 1
+        question_stats.append({
+            "id": q.id,
+            "text": q.text,
+            "options": q.options or [],
+            "counts": option_counts
+        })
+
+    # Completion rate (users who submitted today vs total unique users)
+    completion_rate = round((today_responses / unique_users * 100) if unique_users > 0 else 0, 1)
+
+    return {
+        "total_responses": total_responses,
+        "today_responses": today_responses,
+        "unique_users": unique_users,
+        "completion_rate": completion_rate,
+        "daily_counts": daily_counts,
+        "question_stats": question_stats,
+    }

@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="logo.png" />
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link rel="stylesheet" href="styles.css?v=5" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="i18n.js?v=3"></script>
   <script src="app.js?v=3" defer></script>
   <style>
@@ -197,6 +198,74 @@
     .empty-state i { font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
     .empty-state p { font-size: 0.9rem; margin: 0; }
     .empty-state small { font-size: 0.78rem; opacity: 0.7; }
+
+    /* ── Stats Cards ─────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 4px; height: 100%;
+      border-radius: 0 14px 14px 0;
+    }
+    .stat-card.blue::after { background: #4361ee; }
+    .stat-card.green::after { background: #10b981; }
+    .stat-card.purple::after { background: #7209b7; }
+    .stat-card.orange::after { background: #f59e0b; }
+    .stat-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .stat-icon.blue { color: #4361ee; }
+    .stat-icon.green { color: #10b981; }
+    .stat-icon.purple { color: #7209b7; }
+    .stat-icon.orange { color: #f59e0b; }
+    .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--text-main); line-height: 1; }
+    .stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 700px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+    }
+    .chart-title {
+      font-size: 0.88rem; font-weight: 700; margin-bottom: 1rem;
+      color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;
+    }
+    .section-divider {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 1.5rem 0 1rem;
+    }
+    .section-divider span {
+      font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+    }
+    .section-divider::before, .section-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border-color);
+    }
+
   </style>
 </head>
 <body>
@@ -284,8 +353,47 @@
         </div>
 
         <!-- Questions List -->
+        <!-- Stats Section -->
+        <div id="statsSection">
+          <div class="stats-grid">
+            <div class="stat-card blue">
+              <i class='bx bx-calendar-check stat-icon blue'></i>
+              <div class="stat-num" id="statTotal">-</div>
+              <div class="stat-label">إجمالي التسجيلات</div>
+            </div>
+            <div class="stat-card green">
+              <i class='bx bx-check-circle stat-icon green'></i>
+              <div class="stat-num" id="statToday">-</div>
+              <div class="stat-label">تسجيل اليوم</div>
+            </div>
+            <div class="stat-card purple">
+              <i class='bx bx-group stat-icon purple'></i>
+              <div class="stat-num" id="statUsers">-</div>
+              <div class="stat-label">مستخدمين سجّلوا</div>
+            </div>
+            <div class="stat-card orange">
+              <i class='bx bx-trending-up stat-icon orange'></i>
+              <div class="stat-num" id="statRate">-</div>
+              <div class="stat-label">نسبة التفاعل اليوم</div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card" style="grid-column: 1/-1;">
+              <div class="chart-title"><i class='bx bx-line-chart' style="color:#4361ee;"></i> التسجيلات خلال آخر 7 أيام</div>
+              <canvas id="lineChart" height="80"></canvas>
+            </div>
+          </div>
+
+          <div id="questionCharts"></div>
+        </div>
+
+        <div class="section-divider">
+          <span>📝 إدارة الأسئلة</span>
+        </div>
+
         <div id="questionsList">
-          <div class="empty-state"><i class='bx bx-loader-alt bx-spin'></i>جاري التحميل...</div>
+          <div class="empty-state"><i class='bx bx-loader-alt bx-spin'></i><p>جاري التحميل...</p></div>
         </div>
       </div>
     </div>
@@ -312,6 +420,91 @@
 
   <script>
     let allQuestions = [];
+    let lineChartInst = null;
+    const COLORS = ['#4361ee','#7209b7','#10b981','#f59e0b','#ef4444','#06b6d4'];
+
+    // ── Load Stats ───────────────────────────────────────────────
+    async function loadStats() {
+      try {
+        const res = await apiFetch('/admin/daily-checkin/stats');
+        if (!res || !res.ok) return;
+        const s = await res.json();
+
+        document.getElementById('statTotal').textContent = s.total_responses;
+        document.getElementById('statToday').textContent = s.today_responses;
+        document.getElementById('statUsers').textContent = s.unique_users;
+        document.getElementById('statRate').textContent = s.completion_rate + '%';
+
+        // Line chart – last 7 days
+        const labels = s.daily_counts.map(d => {
+          const dt = new Date(d.date);
+          return dt.toLocaleDateString('ar-EG', { weekday: 'short' });
+        });
+        const counts = s.daily_counts.map(d => d.count);
+
+        if (lineChartInst) lineChartInst.destroy();
+        lineChartInst = new Chart(document.getElementById('lineChart'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'تسجيلات',
+              data: counts,
+              borderColor: '#4361ee',
+              backgroundColor: 'rgba(67,97,238,0.1)',
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#4361ee',
+              pointRadius: 5,
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+
+        // Per-question bar charts
+        const qContainer = document.getElementById('questionCharts');
+        qContainer.innerHTML = '';
+        if (s.question_stats && s.question_stats.length) {
+          const grid = document.createElement('div');
+          grid.className = 'charts-grid';
+          s.question_stats.forEach((q, qi) => {
+            const card = document.createElement('div');
+            card.className = 'chart-card';
+            card.innerHTML = `
+              <div class="chart-title"><i class='bx bx-bar-chart-alt-2' style="color:${COLORS[qi % COLORS.length]};"></i> ${q.text}</div>
+              <canvas id="qChart${qi}" height="120"></canvas>
+            `;
+            grid.appendChild(card);
+            setTimeout(() => {
+              new Chart(document.getElementById(`qChart${qi}`), {
+                type: 'bar',
+                data: {
+                  labels: q.options,
+                  datasets: [{
+                    data: q.options.map(o => q.counts[o] || 0),
+                    backgroundColor: COLORS[qi % COLORS.length] + 'cc',
+                    borderRadius: 6,
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  plugins: { legend: { display: false } },
+                  scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } }
+                }
+              });
+            }, 50);
+          });
+          qContainer.appendChild(grid);
+        }
+      } catch(e) { console.error('stats error', e); }
+    }
 
     // ── Load Questions ──────────────────────────────────────────
     async function loadQuestions() {
@@ -327,6 +520,7 @@
         document.getElementById('questionsList').innerHTML = `<div class="empty-state"><i class='bx bx-error'></i>خطأ في الاتصال بالسيرفر</div>`;
       }
     }
+
 
     function renderQuestions() {
       const container = document.getElementById('questionsList');
@@ -471,6 +665,7 @@
       if (window.requireAuth) requireAuth();
       else { if (!localStorage.getItem('admin_token')) window.location.href = 'index.html'; }
       loadQuestions();
+      loadStats();
     });
   </script>
 </main>
