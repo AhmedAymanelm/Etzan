@@ -109,3 +109,85 @@ async def get_checkin_history(
     )
     responses = result.scalars().all()
     return [r.to_dict() for r in responses]
+
+
+@router.get("/stats", summary="Get user's personal check-in statistics")
+async def get_user_checkin_stats(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns personal weekly check-in stats for the current user:
+    - total_days: how many days they've submitted
+    - streak: current consecutive day streak
+    - weekly_counts: last 7 days submission count (0 or 1 per day)
+    - last_7_answers: last 7 responses with answers for mood trend
+    - completion_rate: percentage of days completed out of last 30 days
+    """
+    from datetime import date, timedelta
+
+    today = date.today()
+    user_id_str = str(current_user.id)
+
+    # All user responses (last 30 days)
+    thirty_days_ago = today - timedelta(days=29)
+    result = await db.execute(
+        select(DailyCheckInResponse)
+        .where(
+            and_(
+                DailyCheckInResponse.user_id == user_id_str,
+                DailyCheckInResponse.date >= thirty_days_ago
+            )
+        )
+        .order_by(DailyCheckInResponse.date.desc())
+    )
+    responses = result.scalars().all()
+
+    # Total days submitted
+    total_days = len(responses)
+
+    # Completion rate (last 30 days)
+    completion_rate = round((total_days / 30) * 100, 1)
+
+    # Current streak
+    streak = 0
+    check_date = today
+    submitted_dates = {r.date for r in responses}
+    while check_date in submitted_dates:
+        streak += 1
+        check_date -= timedelta(days=1)
+
+    # Last 7 days: did user submit? (1 or 0 per day)
+    weekly_counts = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        day_name_map = {
+            0: "الاثنين", 1: "الثلاثاء", 2: "الأربعاء",
+            3: "الخميس", 4: "الجمعة", 5: "السبت", 6: "الأحد"
+        }
+        weekly_counts.append({
+            "date": str(day),
+            "day_name": day_name_map[day.weekday()],
+            "submitted": day in submitted_dates,
+            "is_today": day == today
+        })
+
+    # Last 7 responses with answers for mood analysis
+    last_7 = [r.to_dict() for r in responses[:7]]
+
+    # Get active questions for context
+    q_result = await db.execute(
+        select(DailyCheckInQuestion)
+        .where(DailyCheckInQuestion.is_active == True)
+        .order_by(DailyCheckInQuestion.order_index)
+    )
+    questions = q_result.scalars().all()
+
+    return {
+        "total_days": total_days,
+        "streak": streak,
+        "completion_rate": completion_rate,
+        "weekly_counts": weekly_counts,
+        "last_7_responses": last_7,
+        "questions": [q.to_dict() for q in questions],
+    }
