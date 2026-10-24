@@ -189,19 +189,21 @@
   </div>
 
   <script>
-    requireAuth();
-
     let allQuestions = [];
 
     // ── Load Questions ──────────────────────────────────────────
     async function loadQuestions() {
-      const res = await apiFetch('/admin/daily-checkin/questions');
-      if (!res || !res.ok) {
-        document.getElementById('questionsList').innerHTML = `<div class="empty-state"><i class='bx bx-error'></i>فشل تحميل الأسئلة</div>`;
-        return;
+      try {
+        const res = await apiFetch('/admin/daily-checkin/questions');
+        if (!res || !res.ok) {
+          document.getElementById('questionsList').innerHTML = `<div class="empty-state"><i class='bx bx-error'></i>فشل تحميل الأسئلة - تأكد من تحديث السيرفر</div>`;
+          return;
+        }
+        allQuestions = await res.json();
+        renderQuestions();
+      } catch(e) {
+        document.getElementById('questionsList').innerHTML = `<div class="empty-state"><i class='bx bx-error'></i>خطأ في الاتصال بالسيرفر</div>`;
       }
-      allQuestions = await res.json();
-      renderQuestions();
     }
 
     function renderQuestions() {
@@ -343,7 +345,11 @@
       setTimeout(() => toast.style.transform = 'translateX(-50%) translateY(80px)', 3000);
     }
 
-    document.addEventListener('DOMContentLoaded', loadQuestions);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.requireAuth) requireAuth();
+      else { if (!localStorage.getItem('admin_token')) window.location.href = 'index.html'; }
+      loadQuestions();
+    });
   </script>
 </body>
 </html>
