@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>التسجيل اليومي - لوحة التحكم</title>
+  <title>Daily Check-In - Etzan</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link rel="stylesheet" href="styles.css?v=5" />
+  <script src="i18n.js?v=3"></script>
   <script src="app.js?v=3" defer></script>
-  <script src="i18n.js?v=3" defer></script>
   <style>
     .question-card {
       background: var(--bg-surface);
@@ -85,36 +86,34 @@
   <div class="app-layout">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <img src="logo.png" class="sidebar-logo-img" alt="Etzan" />
-        <span class="sidebar-logo-text">Etzan</span>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="nav-section-title">Main</div>
-        <a href="index.html" class="nav-item"><i class='bx bx-home-alt'></i><span>Dashboard</span></a>
-        <a href="users.html" class="nav-item"><i class='bx bx-group'></i><span>Users</span></a>
-        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i><span>Payments</span></a>
-        <div class="nav-section-title">Content</div>
-        <a href="questions.html" class="nav-item"><i class='bx bx-question-mark'></i><span>Questions</span></a>
-        <a href="daily-checkin.html" class="nav-item active"><i class='bx bx-calendar-check'></i><span>التسجيل اليومي</span></a>
-        <a href="team.html" class="nav-item"><i class='bx bx-briefcase'></i><span>Team</span></a>
-        <a href="about.html" class="nav-item"><i class='bx bx-info-circle'></i><span>About</span></a>
-        <div class="nav-section-title">System</div>
-        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i><span>Settings</span></a>
-        <a href="notifications.html" class="nav-item"><i class='bx bx-bell'></i><span>Notifications</span></a>
-        <a class="nav-item nav-logout" href="#" onclick="logout()"><i class='bx bx-log-out'></i><span>Logout</span></a>
+      <div class="sidebar-logo"><img src="logo.png" alt="Etzan" class="sidebar-logo-img" /><span class="sidebar-logo-text" data-i18n="sidebar-logo">Etzan</span></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span data-i18n="nav-dashboard">Dashboard</span></a>
+        <div class="nav-divider"></div>
+        <a href="users.html" class="nav-item"><i class='bx bx-group'></i> <span data-i18n="nav-users">Users</span></a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span data-i18n="nav-assessments">Assessments</span></a>
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span data-i18n="nav-payments">Payments</span></a>
+        <a href="team.html" class="nav-item"><i class='bx bx-id-card'></i> <span>فريق العمل</span></a>
+        <a href="about.html" class="nav-item"><i class='bx bx-info-circle'></i> <span>عن التطبيق</span></a>
+        <a href="daily-checkin.html" class="nav-item active"><i class='bx bx-calendar-check'></i> <span>التسجيل اليومي</span></a>
+        <div class="nav-divider"></div>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span data-i18n="nav-settings">Settings</span></a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span data-i18n="nav-logout">Logout</span></a>
       </nav>
     </aside>
 
-    <div class="main-content">
-      <!-- Top Header -->
+    <main class="main-content">
       <header class="top-header">
         <div class="header-left">
           <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
         </div>
         <div class="header-right">
+          <button class="btn-icon" id="toggleLanguage" title="Switch Language"><span>عربي</span></button>
           <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
-          <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
+          <div class="user-profile">
+            <div class="avatar"><i class='bx bx-user'></i></div>
+          </div>
         </div>
       </header>
 
@@ -351,5 +350,7 @@
       loadQuestions();
     });
   </script>
+</main>
+</div>
 </body>
 </html>
