@@ -1642,3 +1642,115 @@ async def delete_notification_log(
     await db.delete(log_entry)
     await db.commit()
     return {"message": "Notification log deleted"}
+
+
+# ─── Daily Check-In Admin Endpoints ──────────────────────────────────────────
+
+class DailyCheckInQuestionCreate(BaseModel):
+    text: str
+    options: list  # List of 3 strings
+    order_index: int = 0
+    is_active: bool = True
+
+
+class DailyCheckInQuestionUpdate(BaseModel):
+    text: Optional[str] = None
+    options: Optional[list] = None
+    order_index: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+@router.get("/daily-checkin/questions", summary="List all daily check-in questions (Admin)")
+async def admin_list_checkin_questions(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    from app.models.daily_checkin import DailyCheckInQuestion
+    result = await db.execute(
+        select(DailyCheckInQuestion).order_by(DailyCheckInQuestion.order_index)
+    )
+    questions = result.scalars().all()
+    return [q.to_dict() for q in questions]
+
+
+@router.post("/daily-checkin/questions", summary="Create a daily check-in question (Admin)")
+async def admin_create_checkin_question(
+    body: DailyCheckInQuestionCreate,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    from app.models.daily_checkin import DailyCheckInQuestion
+    if len(body.options) < 2:
+        raise HTTPException(status_code=400, detail="يجب أن يكون هناك خيارين على الأقل")
+    q = DailyCheckInQuestion(
+        text=body.text,
+        options=body.options,
+        order_index=body.order_index,
+        is_active=body.is_active
+    )
+    db.add(q)
+    await db.commit()
+    await db.refresh(q)
+    return q.to_dict()
+
+
+@router.put("/daily-checkin/questions/{question_id}", summary="Update a daily check-in question (Admin)")
+async def admin_update_checkin_question(
+    question_id: int,
+    body: DailyCheckInQuestionUpdate,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    from app.models.daily_checkin import DailyCheckInQuestion
+    from sqlalchemy import update as sql_update
+    values = {}
+    if body.text is not None: values["text"] = body.text
+    if body.options is not None: values["options"] = body.options
+    if body.order_index is not None: values["order_index"] = body.order_index
+    if body.is_active is not None: values["is_active"] = body.is_active
+    if not values:
+        raise HTTPException(status_code=400, detail="لا يوجد بيانات للتحديث")
+    await db.execute(
+        sql_update(DailyCheckInQuestion)
+        .where(DailyCheckInQuestion.id == question_id)
+        .values(**values)
+        .execution_options(synchronize_session="fetch")
+    )
+    await db.commit()
+    result = await db.execute(select(DailyCheckInQuestion).where(DailyCheckInQuestion.id == question_id))
+    q = result.scalar_one_or_none()
+    if not q:
+        raise HTTPException(status_code=404, detail="السؤال غير موجود")
+    return q.to_dict()
+
+
+@router.delete("/daily-checkin/questions/{question_id}", summary="Delete a daily check-in question (Admin)")
+async def admin_delete_checkin_question(
+    question_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    from app.models.daily_checkin import DailyCheckInQuestion
+    result = await db.execute(select(DailyCheckInQuestion).where(DailyCheckInQuestion.id == question_id))
+    q = result.scalar_one_or_none()
+    if not q:
+        raise HTTPException(status_code=404, detail="السؤال غير موجود")
+    await db.delete(q)
+    await db.commit()
+    return {"message": "تم حذف السؤال بنجاح"}
+
+
+@router.get("/daily-checkin/responses", summary="Get all daily check-in responses (Admin)")
+async def admin_list_checkin_responses(
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    from app.models.daily_checkin import DailyCheckInResponse
+    result = await db.execute(
+        select(DailyCheckInResponse)
+        .order_by(DailyCheckInResponse.date.desc())
+        .limit(limit)
+    )
+    responses = result.scalars().all()
+    return [r.to_dict() for r in responses]

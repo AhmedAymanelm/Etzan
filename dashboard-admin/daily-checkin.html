@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>التسجيل اليومي - لوحة التحكم</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="styles.css?v=5" />
+  <script src="app.js?v=3" defer></script>
+  <script src="i18n.js?v=3" defer></script>
+  <style>
+    .question-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      transition: box-shadow 0.2s;
+    }
+    .question-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+    .q-number {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--primary-color); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .q-body { flex: 1; }
+    .q-text { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-main); }
+    .q-options { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .q-option-badge {
+      background: var(--bg-body); border: 1px solid var(--border-color);
+      border-radius: 20px; padding: 0.25rem 0.75rem; font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .q-actions { display: flex; gap: 0.4rem; align-items: center; }
+    .q-status-badge {
+      font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 600;
+    }
+    .q-status-active { background: #d1fae5; color: #065f46; }
+    .q-status-inactive { background: #fee2e2; color: #991b1b; }
+    .add-question-form {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+    .add-question-form.open { display: block; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .form-group input, .form-group textarea {
+      width: 100%; padding: 0.55rem 0.8rem;
+      border: 1px solid var(--border-color); border-radius: 8px;
+      background: var(--bg-main); color: var(--text-main);
+      font-size: 0.9rem; font-family: inherit;
+    }
+    .options-builder { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option-row { display: flex; gap: 0.5rem; align-items: center; }
+    .option-row input { flex: 1; }
+    .option-row .opt-num {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--primary-color);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+    }
+    .btn-add-option {
+      margin-top: 0.4rem; padding: 0.35rem 0.8rem; font-size: 0.8rem;
+      background: transparent; border: 1px dashed var(--border-color);
+      border-radius: 8px; cursor: pointer; color: var(--text-muted);
+      display: flex; align-items: center; gap: 0.3rem; width: fit-content;
+    }
+    .btn-add-option:hover { background: var(--bg-body); }
+    .form-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; justify-content: flex-end; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg-surface); border-radius: 16px; padding: 2rem; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 0.9rem; }
+    .empty-state i { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <img src="logo.png" class="sidebar-logo-img" alt="Etzan" />
+        <span class="sidebar-logo-text">Etzan</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Main</div>
+        <a href="index.html" class="nav-item"><i class='bx bx-home-alt'></i><span>Dashboard</span></a>
+        <a href="users.html" class="nav-item"><i class='bx bx-group'></i><span>Users</span></a>
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i><span>Payments</span></a>
+        <div class="nav-section-title">Content</div>
+        <a href="questions.html" class="nav-item"><i class='bx bx-question-mark'></i><span>Questions</span></a>
+        <a href="daily-checkin.html" class="nav-item active"><i class='bx bx-calendar-check'></i><span>التسجيل اليومي</span></a>
+        <a href="team.html" class="nav-item"><i class='bx bx-briefcase'></i><span>Team</span></a>
+        <a href="about.html" class="nav-item"><i class='bx bx-info-circle'></i><span>About</span></a>
+        <div class="nav-section-title">System</div>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i><span>Settings</span></a>
+        <a href="notifications.html" class="nav-item"><i class='bx bx-bell'></i><span>Notifications</span></a>
+        <a class="nav-item nav-logout" href="#" onclick="logout()"><i class='bx bx-log-out'></i><span>Logout</span></a>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
+        </div>
+        <div class="header-right">
+          <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
+          <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <div class="dashboard-header-info">
+          <div class="breadcrumb">
+            <strong>التسجيل اليومي</strong>
+            <span>|</span>
+            <span>إدارة أسئلة التسجيل اليومي</span>
+          </div>
+        </div>
+
+        <!-- Header + Add Button -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+          <div>
+            <h2 style="font-size:1.1rem;font-weight:700;margin:0;">📋 أسئلة التسجيل اليومي</h2>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin:0.25rem 0 0;">هذه الأسئلة تظهر للمستخدم يومياً في التطبيق</p>
+          </div>
+          <button onclick="toggleAddForm()" id="addBtn" style="padding:0.55rem 1.2rem;background:var(--primary-color);color:#fff;border:none;border-radius:8px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:0.4rem;">
+            <i class='bx bx-plus'></i> إضافة سؤال
+          </button>
+        </div>
+
+        <!-- Add / Edit Form -->
+        <div class="add-question-form" id="questionForm">
+          <h3 id="formTitle" style="margin:0 0 1.25rem;font-size:0.95rem;font-weight:700;">➕ سؤال جديد</h3>
+          <input type="hidden" id="editQuestionId">
+          <div class="form-group">
+            <label>نص السؤال</label>
+            <input type="text" id="fText" placeholder="مثال: كيف كان نومك الليلة الماضية؟">
+          </div>
+          <div class="form-group">
+            <label>الترتيب</label>
+            <input type="number" id="fOrder" value="0" min="0" style="width:120px;">
+          </div>
+          <div class="form-group">
+            <label>الخيارات</label>
+            <div class="options-builder" id="optionsBuilder"></div>
+            <button class="btn-add-option" onclick="addOptionField()"><i class='bx bx-plus'></i> إضافة خيار</button>
+          </div>
+          <div class="form-actions">
+            <button onclick="closeForm()" style="padding:0.5rem 1.2rem;border:1px solid var(--border-color);border-radius:8px;background:transparent;color:var(--text-main);cursor:pointer;">إلغاء</button>
+            <button onclick="saveQuestion()" style="padding:0.5rem 1.4rem;border:none;border-radius:8px;background:var(--primary-color);color:#fff;cursor:pointer;font-weight:600;">حفظ</button>
+          </div>
+        </div>
+
+        <!-- Questions List -->
+        <div id="questionsList">
+          <div class="empty-state"><i class='bx bx-loader-alt bx-spin'></i>جاري التحميل...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+    <div class="modal-box" style="max-width:380px;">
+      <h3 style="margin:0 0 0.75rem;font-size:1rem;">🗑️ حذف السؤال</h3>
+      <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:1.5rem;">هل أنت متأكد من حذف هذا السؤال؟ لا يمكن التراجع عن هذا الإجراء.</p>
+      <input type="hidden" id="deleteQuestionId">
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+        <button onclick="closeDeleteModal()" style="padding:0.5rem 1.2rem;border:1px solid var(--border-color);border-radius:8px;background:transparent;color:var(--text-main);cursor:pointer;">إلغاء</button>
+        <button onclick="confirmDelete()" style="padding:0.5rem 1.2rem;border:none;border-radius:8px;background:#dc2626;color:#fff;cursor:pointer;font-weight:600;">حذف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="creativeToast" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-surface);border:1px solid var(--border-color);border-radius:12px;padding:0.75rem 1.5rem;display:flex;align-items:center;gap:0.6rem;font-size:0.88rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.12);transition:transform 0.3s ease;z-index:999;">
+    <i class='bx bxs-check-circle' style="font-size:1.2rem;color:#10b981;"></i>
+    <span id="ctText"></span>
+  </div>
+
+  <script>
+    requireAuth();
+
+    let allQuestions = [];
+
+    // ── Load Questions ──────────────────────────────────────────
+    async function loadQuestions() {
+      const res = await apiFetch('/admin/daily-checkin/questions');
+      if (!res || !res.ok) {
+        document.getElementById('questionsList').innerHTML = `<div class="empty-state"><i class='bx bx-error'></i>فشل تحميل الأسئلة</div>`;
+        return;
+      }
+      allQuestions = await res.json();
+      renderQuestions();
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questionsList');
+      if (!allQuestions.length) {
+        container.innerHTML = `<div class="empty-state"><i class='bx bx-ghost'></i>لا توجد أسئلة بعد. أضف سؤالاً جديداً!</div>`;
+        return;
+      }
+      container.innerHTML = allQuestions.map((q, i) => `
+        <div class="question-card">
+          <div class="q-number">${i + 1}</div>
+          <div class="q-body">
+            <div class="q-text">${q.text}</div>
+            <div class="q-options">
+              ${(q.options || []).map(opt => `<span class="q-option-badge">${opt}</span>`).join('')}
+            </div>
+            <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">ترتيب: ${q.order_index}</div>
+          </div>
+          <div class="q-actions">
+            <span class="q-status-badge ${q.is_active ? 'q-status-active' : 'q-status-inactive'}">${q.is_active ? 'مفعّل' : 'معطّل'}</span>
+            <button class="btn-sm btn-info" onclick="editQuestion(${q.id})" title="تعديل"><i class='bx bx-edit'></i></button>
+            <button class="btn-sm btn-del" onclick="openDeleteModal(${q.id})" title="حذف"><i class='bx bx-trash'></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── Form ────────────────────────────────────────────────────
+    let optionCount = 0;
+
+    function toggleAddForm() {
+      const form = document.getElementById('questionForm');
+      if (form.classList.contains('open')) { closeForm(); return; }
+      document.getElementById('formTitle').textContent = '➕ سؤال جديد';
+      document.getElementById('editQuestionId').value = '';
+      document.getElementById('fText').value = '';
+      document.getElementById('fOrder').value = allQuestions.length;
+      document.getElementById('optionsBuilder').innerHTML = '';
+      optionCount = 0;
+      // Add 3 default options
+      addOptionField(); addOptionField(); addOptionField();
+      form.classList.add('open');
+    }
+
+    function closeForm() {
+      document.getElementById('questionForm').classList.remove('open');
+    }
+
+    function addOptionField(value = '') {
+      optionCount++;
+      const num = optionCount;
+      const row = document.createElement('div');
+      row.className = 'option-row';
+      row.id = `opt-row-${num}`;
+      row.innerHTML = `
+        <div class="opt-num">${num}</div>
+        <input type="text" id="opt-${num}" placeholder="نص الخيار..." value="${value}">
+        <button onclick="removeOption(${num})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:1.1rem;" title="حذف"><i class='bx bx-x'></i></button>
+      `;
+      document.getElementById('optionsBuilder').appendChild(row);
+    }
+
+    function removeOption(num) {
+      const row = document.getElementById(`opt-row-${num}`);
+      if (row) row.remove();
+    }
+
+    function getOptions() {
+      const inputs = document.querySelectorAll('#optionsBuilder input[type="text"]');
+      return Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+    }
+
+    async function saveQuestion() {
+      const id = document.getElementById('editQuestionId').value;
+      const text = document.getElementById('fText').value.trim();
+      const order = parseInt(document.getElementById('fOrder').value) || 0;
+      const options = getOptions();
+
+      if (!text) { showToast('أدخل نص السؤال', 'bx-error-circle'); return; }
+      if (options.length < 2) { showToast('أضف خيارين على الأقل', 'bx-error-circle'); return; }
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `/admin/daily-checkin/questions/${id}` : '/admin/daily-checkin/questions';
+
+      const res = await apiFetch(url, {
+        method,
+        body: JSON.stringify({ text, options, order_index: order, is_active: true })
+      });
+
+      if (res && res.ok) {
+        showToast(id ? '✅ تم تحديث السؤال' : '✅ تم إضافة السؤال');
+        closeForm();
+        loadQuestions();
+      } else {
+        showToast('فشل الحفظ', 'bx-error-circle');
+      }
+    }
+
+    function editQuestion(id) {
+      const q = allQuestions.find(x => x.id === id);
+      if (!q) return;
+      document.getElementById('formTitle').textContent = '✏️ تعديل السؤال';
+      document.getElementById('editQuestionId').value = q.id;
+      document.getElementById('fText').value = q.text;
+      document.getElementById('fOrder').value = q.order_index;
+      document.getElementById('optionsBuilder').innerHTML = '';
+      optionCount = 0;
+      (q.options || []).forEach(opt => addOptionField(opt));
+      document.getElementById('questionForm').classList.add('open');
+      document.getElementById('questionForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ── Delete ──────────────────────────────────────────────────
+    function openDeleteModal(id) {
+      document.getElementById('deleteQuestionId').value = id;
+      document.getElementById('deleteModal').classList.add('show');
+    }
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('show');
+    }
+    async function confirmDelete() {
+      const id = document.getElementById('deleteQuestionId').value;
+      const res = await apiFetch(`/admin/daily-checkin/questions/${id}`, { method: 'DELETE' });
+      if (res && res.ok) {
+        showToast('✅ تم حذف السؤال');
+        closeDeleteModal();
+        loadQuestions();
+      } else {
+        showToast('فشل الحذف', 'bx-error-circle');
+      }
+    }
+
+    // ── Toast ───────────────────────────────────────────────────
+    function showToast(text, icon = 'bxs-check-circle') {
+      const toast = document.getElementById('creativeToast');
+      document.getElementById('ctText').textContent = text;
+      toast.querySelector('i').className = 'bx ' + icon;
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      setTimeout(() => toast.style.transform = 'translateX(-50%) translateY(80px)', 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadQuestions);
+  </script>
+</body>
+</html>
